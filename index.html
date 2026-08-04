@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Premium real estate video editing for media companies and agents. Cinematic quality. Consistent results." />
+    <title>Cliffside Cuts · Real Estate Video Editing</title>
+    <link rel="icon" href="assets/favicon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header" id="header">
+      <nav class="nav shell">
+        <a href="#home" class="brand" aria-label="Cliffside Cuts home"><img src="assets/logo-cliffside.png" alt="Cliffside Cuts" /></a>
+        <ul class="nav-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#black-label">Black Label</a></li>
+          <li><a href="#membership">Membership</a></li>
+          <li><a href="#a-la-carte">A La Carte</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="button button-small button-outline" href="#a-la-carte">Order Now</a>
+          <a class="button button-small button-gold" href="#contact">Log In</a>
+        </div>
+        <button class="menu-toggle" type="button" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </nav>
+      <div class="mobile-menu">
+        <a href="#home">Home</a><a href="#about">About</a><a href="#black-label">Black Label</a>
+        <a href="#membership">Membership</a><a href="#a-la-carte">A La Carte</a>
+        <div class="mobile-actions"><a class="button button-outline" href="#a-la-carte">Order Now</a><a class="button button-gold" href="#contact">Log In</a></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="home">
+        <video autoplay muted loop playsinline preload="metadata" src="assets/hero-bg.mp4"></video>
+        <div class="hero-shade"></div>
+        <div class="hero-content reveal">
+          <p class="eyebrow">Premium Real Estate Video Editing</p>
+          <h1>Your Content. Elevated.</h1>
+          <p class="hero-copy">Professional editing for real estate media companies and agents. Cinematic quality. Consistent results.</p>
+          <div class="button-row">
+            <a class="button button-gold button-large" href="#contact">Book A Call</a>
+            <a class="button button-outline button-large" href="#a-la-carte">Order À La Carte</a>
+          </div>
+        </div>
+        <a class="scroll-cue" href="#a-la-carte"><span>Scroll</span><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg></a>
+      </section>
+
+      <section class="packages section" id="a-la-carte">
+        <div class="shell">
+          <div class="section-heading reveal">
+            <p class="kicker">À La Carte</p>
+            <h2>Per-Video Editing</h2>
+            <p>Choose your style, upload your footage, get your edit.</p>
+          </div>
+          <div class="package-grid" id="packageGrid"></div>
+          <p class="custom-quote">Need something custom? <a href="#contact">Request a custom quote</a></p>
+        </div>
+      </section>
+
+      <section class="black-label section" id="black-label">
+        <div class="shell">
+          <div class="section-heading reveal">
+            <p class="kicker">The Black Label Division</p>
+            <h2>Your Own Dedicated Editor</h2>
+            <p>A dedicated editor, fully trained on your brand. Integrated into your workflow. Consistent quality at scale.</p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card reveal"><span>01</span><h3>Dedicated Editor</h3><p>Your own editor, embedded in your team. They learn your style, your standards, your workflow.</p></article>
+            <article class="feature-card reveal"><span>02</span><h3>Pro Infrastructure</h3><p>MacBook workstation, Final Cut plugin ecosystem, internal templates and systems.</p></article>
+            <article class="feature-card reveal"><span>03</span><h3>Continuous Training</h3><p>Two structured sessions per week. Your editor doesn't plateau, they keep getting sharper.</p></article>
+            <article class="feature-card reveal"><span>04</span><h3>Creative Oversight</h3><p>Senior leadership reviews every placement. Direct creative direction and quality control.</p></article>
+            <article class="feature-card reveal"><span>05</span><h3>Built for Scale</h3><p>Reserved for companies handling consistent volume and premium work. Reliable support at scale.</p></article>
+          </div>
+          <div class="black-actions"><a class="button button-gold button-large" href="#contact">Book A Call</a><a href="#a-la-carte">Or browse per-video packages</a></div>
+        </div>
+      </section>
+
+      <section class="proof" id="membership">
+        <div class="shell">
+          <div class="metrics">
+            <div class="metric"><strong data-target="5000">0+</strong><span>Videos Delivered</span></div>
+            <div class="metric"><strong data-target="50" data-suffix="M+">0M+</strong><span>Views Generated</span></div>
+            <div class="metric"><strong data-target="150">0+</strong><span>Companies Served</span></div>
+          </div>
+          <p class="trusted-title">Trusted by leading real estate media companies</p>
+          <div class="logo-marquee">
+            <div class="logo-track" id="logoTrack"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="testimonials section" id="about">
+        <div class="shell">
+          <div class="section-heading reveal">
+            <p class="kicker">What Our Clients Say</p>
+            <h2>Words From The Field.</h2>
+          </div>
+          <div class="testimonial-wrap">
+            <div class="testimonial-stage" id="testimonialStage"></div>
+            <div class="testimonial-controls"><button id="prevTestimonial" aria-label="Previous testimonial">←</button><div id="testimonialDots"></div><button id="nextTestimonial" aria-label="Next testimonial">→</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta" id="contact">
+        <video autoplay muted loop playsinline preload="metadata" src="assets/cliffside-footer.mp4"></video>
+        <div class="final-shade"></div>
+        <div class="final-content reveal">
+          <h2>Ready To Elevate Your Content?</h2>
+          <p>Book a call with Bryden to discuss your editing needs.</p>
+          <a class="button button-gold button-xl" href="mailto:hello@cliffsidecuts.com">Book A Call</a>
+          <small>Or order directly. <a href="#a-la-carte">Order Now</a></small>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="shell footer-main">
+        <a class="footer-logo" href="#home"><img src="assets/logo-cliffside.png" alt="Cliffside Cuts" /></a>
+        <div class="footer-columns">
+          <div><h4>Cliffside Cuts</h4><p>Premium real estate video editing for media companies and agents who refuse to look like everyone else.</p><a class="instagram" href="https://instagram.com/cliffsidecuts" aria-label="Instagram">◎</a></div>
+          <div><h4>Navigate</h4><a href="#home">Home</a><a href="#about">About</a><a href="#black-label">Black Label</a><a href="#membership">Membership</a><a href="mailto:hello@cliffsidecuts.com">Contact Us</a></div>
+        </div>
+      </div>
+      <div class="footer-bottom"><div class="shell"><span>© Cliffside Cuts 2026. All rights reserved.</span><div><a href="#">Terms &amp; Conditions</a><span>Website by <a href="https://www.instagram.com/slodhy">@slodhy</a></span></div></div></div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+</html>
