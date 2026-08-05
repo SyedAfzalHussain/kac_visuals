@@ -8,6 +8,6 @@ window.KARRAR_VIDEOS = {
   portrait5: 'https://res.cloudinary.com/dluwhhwoi/video/upload/v1785861561/clu-006-100_Palm_Hill_LN-001_2_1_of2vzb.mp4',
   portrait6: 'https://res.cloudinary.com/dluwhhwoi/video/upload/v1785861517/SDF_new_version_1_dzxj5w.mp4',
   portrait7: 'https://res.cloudinary.com/dluwhhwoi/video/upload/v1785861545/2018_princess_Y75_hype_reel_V4_gwobcj.mp4',
-  landscape1: 'https://res.cloudinary.com/dluwhhwoi/video/upload/v1785870139/cine-26-844_Duplex_Avenue_HOR_V3_opglit.mp4',
+  landscape1: 'https://res.cloudinary.com/dluwhhwoi/video/upload/v1785970460/cine-025-3301-16_Brookers_Lane_UNBRAND_inu9aq.mp4',
   landscape2: 'https://res.cloudinary.com/dluwhhwoi/video/upload/v1785870139/cine-26-844_Duplex_Avenue_HOR_V3_opglit.mp4'
 };
