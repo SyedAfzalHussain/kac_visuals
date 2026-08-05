@@ -1,0 +1,21 @@
+.landscape-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;max-width:1152px;margin:40px auto 0}
+.package-grid .package-card:last-child{grid-column:auto}
+.package-card--landscape,.landscape-grid .package-card:last-child{grid-column:auto;max-width:none}
+.package-card--landscape .package-visual{aspect-ratio:16/9}
+.final-action-row{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.package-visual video{background:#080808}
+.package-visual video:fullscreen{object-fit:contain;background:#000}
+.package-visual video:-webkit-full-screen{object-fit:contain;background:#000}
+.contact-modal[hidden]{display:none}
+.contact-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px}
+.contact-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(8px)}
+.contact-modal__card{position:relative;z-index:1;width:min(100%,620px);padding:48px 34px;text-align:center;background:#111;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 90px rgba(0,0,0,.6)}
+.contact-modal__card>img{width:86px;height:86px;object-fit:cover;border-radius:12px;margin:0 auto 24px}
+.contact-modal__card h2{font:500 34px var(--display);text-transform:uppercase;margin:8px 0 14px}
+.contact-modal__card>p:not(.kicker){color:var(--muted);line-height:1.7}
+.contact-modal__actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:28px 0}
+.contact-modal__actions .button{padding:13px 22px}
+.contact-modal__card address{color:#777;font-size:13px;line-height:1.7;font-style:normal}
+.contact-modal__close{position:absolute;right:16px;top:12px;border:0;background:transparent;color:#aaa;font-size:32px;cursor:pointer}
+.contact-modal-open{overflow:hidden}
+@media(max-width:760px){.landscape-grid{grid-template-columns:1fr;gap:20px}.package-card--landscape{max-width:none}.button-row .button,.final-action-row .button{width:100%}.final-action-row{flex-direction:column}.contact-modal__card{padding:40px 20px}.contact-modal__actions{flex-direction:column}.contact-modal__actions .button{width:100%}}

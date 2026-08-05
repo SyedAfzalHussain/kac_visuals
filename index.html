@@ -7,6 +7,7 @@
     <title>Syed Suhail Karar · Karrar Enterprises</title>
     <link rel="icon" href="assets/karrar/logo.png" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="media-updates.css" />
   </head>
   <body>
     <header class="site-header" id="header">
@@ -41,7 +42,7 @@
         <div class="hero-content reveal">
           <p class="eyebrow">Karrar Enterprises · Premium Editing Services</p>
           <h1>Your Vision. Elevated.</h1>
-          <p class="hero-copy">Premium real estate and social media video editing by Syed Suhail Karar. Cinematic quality. Consistent results.</p>
+          <p class="hero-copy">Karrar Enterprises is a digital media company specializing in professional video editing services for media companies ,video graphers ,real estate agents, businesses, and content creators.</p>
           <div class="button-row">
             <a class="button button-gold button-large" href="/book-a-call/">Start A Project</a>
             <a class="button button-outline button-large" href="#a-la-carte">View Services</a>
@@ -58,6 +59,7 @@
             <p>Select a service, share your footage, and receive a premium edit.</p>
           </div>
           <div class="package-grid" id="packageGrid"></div>
+          <div class="landscape-grid" id="landscapeGrid"></div>
           <p class="custom-quote">Need something custom? <a href="mailto:karrarvisuals@gmail.com">Request a custom quote</a></p>
         </div>
       </section>
@@ -113,7 +115,15 @@
         <div class="final-content reveal">
           <h2>Ready To Elevate Your Content?</h2>
           <p>Contact Syed Suhail Karar to discuss your editing needs.</p>
-          <a class="button button-gold button-xl" href="/book-a-call/">Start A Project</a>
+          <div class="final-action-row">
+            <a class="button button-gold button-xl" href="/book-a-call/">Start A Project</a>
+            <button
+                class="button button-outline button-xl"
+                id="contactDetailsButton"
+                type="button"
+                style="background-color: black; ">
+                Contact Details
+            </button>          </div>
           <small>Or email directly. <a href="mailto:karrarvisuals@gmail.com">Send Email</a></small>
         </div>
       </section>
@@ -129,6 +139,23 @@
       </div>
       <div class="footer-bottom"><div class="shell"><span>© Karrar Enterprises 2026. All rights reserved.</span><div><a href="tel:+14028087996">+1 402 808 7996</a><span><a href="mailto:karrarvisuals@gmail.com">karrarvisuals@gmail.com</a></span></div></div></div>
     </footer>
+
+    <div class="contact-modal" id="contactDetailsModal" hidden>
+      <div class="contact-modal__backdrop" data-close-contact></div>
+      <section class="contact-modal__card" role="dialog" aria-modal="true" aria-labelledby="contactDetailsTitle">
+        <button class="contact-modal__close" type="button" aria-label="Close contact details" data-close-contact>×</button>
+        <img src="assets/karrar/logo.png" alt="Karrar Enterprises" />
+        <p class="kicker">Contact</p>
+        <h2 id="contactDetailsTitle">Syed Suhail Karar</h2>
+        <p>Choose the easiest way to discuss your project.</p>
+        <div class="contact-modal__actions">
+          <a class="button button-gold" href="tel:+14028087996">Call +1 402 808 7996</a>
+          <a class="button button-outline" href="https://wa.me/923499535028" target="_blank" rel="noopener">WhatsApp</a>
+          <a class="button button-outline" href="mailto:karrarvisuals@gmail.com">Email</a>
+        </div>
+        <address>5830 E 2nd St, Ste 7000<br />Casper, WY 82609, United States</address>
+      </section>
+    </div>
     <script src="video-config.js"></script><script src="script.js"></script>
   </body>
 </html>

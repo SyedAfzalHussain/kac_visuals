@@ -1,17 +1,33 @@
 const packages = [
-  ['Signature Edit', '$300', ['Signature Style', 'Premium Finish', 'Portfolio Sample'], 'signature', 'assets/karrar/signature.jpg'],
-  ['Branding Edit', '$170', ['Brand Storytelling', 'Clean Graphics', 'Social Ready'], 'branding', 'assets/karrar/branding.jpg'],
-  ['Yacht Edit', '$260', ['Luxury Visuals', 'Cinematic Pacing', 'Premium Sound Design'], 'yacht', 'assets/karrar/yacht.jpg']
+  ['Signature Edit', '$300', ['Signature Style', 'Premium Finish', 'Portfolio Sample'], 'portrait1', 'assets/karrar/signature.jpg', 'portrait'],
+  ['Branding Edit', '$170', ['Brand Storytelling', 'Clean Graphics', 'Social Ready'], 'portrait2', 'assets/karrar/branding.jpg', 'portrait'],
+  ['Real Estate Edit', '$300', ['Property Storytelling', 'Cinematic Pacing', 'Social Ready'], 'portrait3', 'assets/karrar/signature.jpg', 'portrait'],
+  ['Branding Edit', '$170', ['Clean Graphics', 'Premium Finish', 'Social Ready'], 'portrait4', 'assets/karrar/branding.jpg', 'portrait'],
+  ['Real Estate Edit', '$300', ['Luxury Visuals', 'Property Focused', 'Premium Sound'], 'portrait5', 'assets/karrar/signature.jpg', 'portrait'],
+  ['Yacht Edit', '$260', ['Luxury Visuals', 'Cinematic Pacing', 'Premium Sound Design'], 'portrait7', 'assets/karrar/yacht.jpg', 'portrait'],
+  ['Cinematic Property Film', '$300', ['Landscape Delivery', 'Cinematic Finish', 'Premium Sound'], 'landscape1', 'assets/karrar/signature.jpg', 'landscape'],
+  ['Landscape Property Edit', '$300', ['Wide Format', 'Property Storytelling', 'Premium Finish'], 'landscape2', 'assets/karrar/signature.jpg', 'landscape']
 ];
-if (window.KARRAR_VIDEOS?.hero) document.querySelector('#heroVideo').src = window.KARRAR_VIDEOS.hero;
-if (window.KARRAR_VIDEOS?.footer) document.querySelector('#footerVideo').src = window.KARRAR_VIDEOS.footer;
+function autoplayVideo(video, url) {
+  if (url) video.src = url;
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.play().catch(() => {});
+  video.addEventListener('canplay', () => video.play().catch(() => {}), { once: true });
+}
+autoplayVideo(document.querySelector('#heroVideo'), window.KARRAR_VIDEOS?.hero);
+autoplayVideo(document.querySelector('#footerVideo'), window.KARRAR_VIDEOS?.footer);
 const packageGrid = document.querySelector('#packageGrid');
-packageGrid.innerHTML = packages.map(([name, price, features, key, poster]) => {
+const landscapeGrid = document.querySelector('#landscapeGrid');
+function renderPackages(items) {
+  return items.map(([name, price, features, key, poster, orientation]) => {
   const videoUrl = window.KARRAR_VIDEOS?.[key];
-  const media = videoUrl ? `<video src="${videoUrl}" poster="${poster}" autoplay muted loop playsinline preload="metadata"></video>` : `<img src="${poster}" alt="${name} preview" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`;
+  const media = videoUrl ? `<video src="${videoUrl}" poster="${poster}" autoplay muted loop playsinline preload="auto"></video>` : `<img src="${poster}" alt="${name} preview" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`;
   return `
-  <article class="package-card reveal" style="grid-column:auto">
-    <div class="package-visual" tabindex="0" role="button" aria-label="Play ${name} preview">
+  <article class="package-card package-card--${orientation} reveal">
+    <div class="package-visual" tabindex="0" role="button" aria-label="Open ${name} video fullscreen">
       ${media}
       <div class="package-overlay"></div><span class="play-icon">▶</span>
       <div class="package-info"><h3>${name}</h3><p class="package-price">${price}</p><ul>${features.map(f => `<li>${f}</li>`).join('')}</ul></div>
@@ -19,7 +35,26 @@ packageGrid.innerHTML = packages.map(([name, price, features, key, poster]) => {
     </div>
     <button class="package-select" type="button" data-service="${key}">Book Now</button>
   </article>`;
-}).join('');
+  }).join('');
+}
+packageGrid.innerHTML = renderPackages(packages.filter(item => item[5] === 'portrait'));
+landscapeGrid.innerHTML = renderPackages(packages.filter(item => item[5] === 'landscape'));
+document.querySelectorAll('.package-grid video, .landscape-grid video').forEach(video => autoplayVideo(video));
+
+const contactModal = document.querySelector('#contactDetailsModal');
+const contactButton = document.querySelector('#contactDetailsButton');
+function closeContactDetails() {
+  contactModal.hidden = true;
+  document.body.classList.remove('contact-modal-open');
+  contactButton.focus();
+}
+contactButton.addEventListener('click', () => {
+  contactModal.hidden = false;
+  document.body.classList.add('contact-modal-open');
+  contactModal.querySelector('.contact-modal__close').focus();
+});
+contactModal.addEventListener('click', e => { if (e.target.closest('[data-close-contact]')) closeContactDetails(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !contactModal.hidden) closeContactDetails(); });
 
 const logos = ['CohenCo_White.png','KNOWN-WHITE-768x884.png','Studio-910.png','Studio-Sunday-768x573.png','JT_visuals-768x360.png','Akbar.png','RESONATE_white-768x169.png','Eric-Visuals.png'];
 const logoTrack = document.querySelector('#logoTrack');
@@ -58,7 +93,21 @@ document.addEventListener('click', e => {
   const sound = e.target.closest('.sound-button');
   if (sound) { e.stopPropagation(); const video = sound.closest('.package-visual').querySelector('video'); if (!video) return; video.muted = !video.muted; sound.textContent = video.muted ? '⌁' : '♫'; sound.setAttribute('aria-label', video.muted ? 'Unmute preview' : 'Mute preview'); }
   const visual = e.target.closest('.package-visual');
-  if (visual && !sound) { const video = visual.querySelector('video'); if (!video) return; video.paused ? video.play() : video.pause(); visual.querySelector('.play-icon').textContent = video.paused ? '▶' : 'Ⅱ'; }
+  if (visual && !sound) {
+    const video = visual.querySelector('video');
+    if (!video) return;
+    video.play().catch(() => {});
+    if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  const visual = e.target.closest?.('.package-visual');
+  if (visual && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault();
+    visual.click();
+  }
 });
 
 let countersStarted = false;
