@@ -1,3 +1,10 @@
+if (!document.querySelector('script[src="/_vercel/insights/script.js"]')) {
+  const analytics = document.createElement('script');
+  analytics.defer = true;
+  analytics.src = '/_vercel/insights/script.js';
+  document.head.appendChild(analytics);
+}
+
 const header = document.querySelector('#header');
 const toggle = document.querySelector('.menu-toggle');
 if (header && toggle) {
