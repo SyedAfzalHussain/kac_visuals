@@ -5,17 +5,22 @@ const packages = [
   ['Advanced Branding  ', '$170', ['Brand Storytelling', 'Clean Graphics', 'Social Ready'], 'portrait2', 'assets/karrar/branding.jpg', 'portrait'],
   ['Commercial ', '$230', ['Luxury Visuals', 'Property Focused', 'Premium Sound'], 'portrait5', 'assets/karrar/signature.jpg', 'portrait'],
   ['Yacht ', '$260', ['Luxury Visuals', 'Cinematic Pacing', 'Premium Sound Design'], 'portrait7', 'assets/karrar/yacht.jpg', 'portrait'],
-  ['Cenametic Edit', '$230', ['Wide Format', 'Property Storytelling', 'Premium Finish'], 'landscape2', 'assets/karrar/signature.jpg', 'landscape'],
   ['Simple Edit', '$120', ['Landscape Delivery', 'Cinematic Finish', 'Premium Sound'], 'landscape1', 'assets/karrar/signature.jpg', 'landscape'],
+  ['Cenametic Edit', '$230', ['Wide Format', 'Property Storytelling', 'Premium Finish'], 'landscape2', 'assets/karrar/signature.jpg', 'landscape'],
 ];
 function autoplayVideo(video, url) {
-  if (url) video.src = url;
+  if (url) {
+    video.src = url;
+    video.load();
+  }
   video.muted = true;
   video.defaultMuted = true;
   video.playsInline = true;
   video.preload = 'auto';
   video.play().catch(() => {});
-  video.addEventListener('canplay', () => video.play().catch(() => {}), { once: true });
+  const retryPlay = () => video.play().catch(() => {});
+  video.addEventListener('loadeddata', retryPlay, { once: true });
+  video.addEventListener('canplay', retryPlay, { once: true });
 }
 autoplayVideo(document.querySelector('#heroVideo'), window.KARRAR_VIDEOS?.hero);
 autoplayVideo(document.querySelector('#footerVideo'), window.KARRAR_VIDEOS?.footer);
