@@ -1,12 +1,12 @@
 const packages = [
-  ['Signature Edit', '$300', ['Signature Style', 'Premium Finish', 'Portfolio Sample'], 'portrait1', 'assets/karrar/signature.jpg', 'portrait'],
-  ['Branding Edit', '$170', ['Brand Storytelling', 'Clean Graphics', 'Social Ready'], 'portrait2', 'assets/karrar/branding.jpg', 'portrait'],
-  ['Real Estate Edit', '$300', ['Property Storytelling', 'Cinematic Pacing', 'Social Ready'], 'portrait3', 'assets/karrar/signature.jpg', 'portrait'],
-  ['Branding Edit', '$170', ['Clean Graphics', 'Premium Finish', 'Social Ready'], 'portrait4', 'assets/karrar/branding.jpg', 'portrait'],
-  ['Real Estate Edit', '$300', ['Luxury Visuals', 'Property Focused', 'Premium Sound'], 'portrait5', 'assets/karrar/signature.jpg', 'portrait'],
-  ['Yacht Edit', '$260', ['Luxury Visuals', 'Cinematic Pacing', 'Premium Sound Design'], 'portrait7', 'assets/karrar/yacht.jpg', 'portrait'],
-  ['Cinematic Property Film', '$300', ['Landscape Delivery', 'Cinematic Finish', 'Premium Sound'], 'landscape1', 'assets/karrar/signature.jpg', 'landscape'],
-  ['Landscape Property Edit', '$300', ['Wide Format', 'Property Storytelling', 'Premium Finish'], 'landscape2', 'assets/karrar/signature.jpg', 'landscape']
+  ['Signature  ', '$260', ['Signature Style', 'Premium Finish', 'Portfolio Sample'], 'portrait1', 'assets/karrar/signature.jpg', 'portrait'],
+  ['listing', '$230', ['Property Storytelling', 'Cinematic Pacing', 'Social Ready'], 'portrait3', 'assets/karrar/signature.jpg', 'portrait'],
+  ['Standard Branding  ', '$120', ['Clean Graphics', 'Premium Finish', 'Social Ready'], 'portrait4', 'assets/karrar/branding.jpg', 'portrait'],
+  ['Advanced Branding  ', '$170', ['Brand Storytelling', 'Clean Graphics', 'Social Ready'], 'portrait2', 'assets/karrar/branding.jpg', 'portrait'],
+  ['Commercial ', '$230', ['Luxury Visuals', 'Property Focused', 'Premium Sound'], 'portrait5', 'assets/karrar/signature.jpg', 'portrait'],
+  ['Yacht ', '$260', ['Luxury Visuals', 'Cinematic Pacing', 'Premium Sound Design'], 'portrait7', 'assets/karrar/yacht.jpg', 'portrait'],
+  ['Cenametic Edit', '$230', ['Wide Format', 'Property Storytelling', 'Premium Finish'], 'landscape2', 'assets/karrar/signature.jpg', 'landscape'],
+  ['Simple Edit', '$120', ['Landscape Delivery', 'Cinematic Finish', 'Premium Sound'], 'landscape1', 'assets/karrar/signature.jpg', 'landscape'],
 ];
 function autoplayVideo(video, url) {
   if (url) video.src = url;
@@ -56,7 +56,7 @@ contactButton.addEventListener('click', () => {
 contactModal.addEventListener('click', e => { if (e.target.closest('[data-close-contact]')) closeContactDetails(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !contactModal.hidden) closeContactDetails(); });
 
-const logos = ['CohenCo_White.png','KNOWN-WHITE-768x884.png','Studio-910.png','Studio-Sunday-768x573.png','JT_visuals-768x360.png','Akbar.png','RESONATE_white-768x169.png','Eric-Visuals.png'];
+const logos = ['sharkey.png','Studio-910.png','Studio-Sunday-768x573.png','oppB.png','clutch.png','movemed.png'];
 const logoTrack = document.querySelector('#logoTrack');
 logoTrack.innerHTML = [...logos, ...logos].map(name => `<img src="assets/logos/${name}" alt="Client logo" />`).join('');
 
