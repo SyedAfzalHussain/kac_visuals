@@ -94,16 +94,15 @@ addEventListener('scroll', () => header.classList.toggle('scrolled', scrollY > 2
 
 document.addEventListener('click', e => {
   const select = e.target.closest('.package-select');
-  if (select) { location.href = `/book-a-call/?service=${encodeURIComponent(select.dataset.service)}`; }
+  if (select) { location.href = `/order/?service=${encodeURIComponent(select.dataset.service)}`; }
   const sound = e.target.closest('.sound-button');
   if (sound) { e.stopPropagation(); const video = sound.closest('.package-visual').querySelector('video'); if (!video) return; video.muted = !video.muted; sound.textContent = video.muted ? '⌁' : '♫'; sound.setAttribute('aria-label', video.muted ? 'Unmute preview' : 'Mute preview'); }
   const visual = e.target.closest('.package-visual');
   if (visual && !sound) {
     const video = visual.querySelector('video');
     if (!video) return;
-    video.play().catch(() => {});
-    if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
-    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    const title = visual.querySelector('h3')?.textContent?.trim() || 'Video preview';
+    window.KarrarVideoViewer?.open(video.currentSrc || video.src, title, visual);
   }
 });
 
