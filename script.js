@@ -46,21 +46,6 @@ packageGrid.innerHTML = renderPackages(packages.filter(item => item[5] === 'port
 landscapeGrid.innerHTML = renderPackages(packages.filter(item => item[5] === 'landscape'));
 document.querySelectorAll('.package-grid video, .landscape-grid video').forEach(video => autoplayVideo(video));
 
-const contactModal = document.querySelector('#contactDetailsModal');
-const contactButton = document.querySelector('#contactDetailsButton');
-function closeContactDetails() {
-  contactModal.hidden = true;
-  document.body.classList.remove('contact-modal-open');
-  contactButton.focus();
-}
-contactButton.addEventListener('click', () => {
-  contactModal.hidden = false;
-  document.body.classList.add('contact-modal-open');
-  contactModal.querySelector('.contact-modal__close').focus();
-});
-contactModal.addEventListener('click', e => { if (e.target.closest('[data-close-contact]')) closeContactDetails(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !contactModal.hidden) closeContactDetails(); });
-
 const logos = ['sharkey.png','Studio-910.png','Studio-Sunday-768x573.png','oppB.png','clutch.png','movemed.png'];
 const logoTrack = document.querySelector('#logoTrack');
 logoTrack.innerHTML = [...logos, ...logos].map(name => `<img src="assets/logos/${name}" alt="Client logo" />`).join('');

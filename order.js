@@ -17,6 +17,34 @@ const summaryTotal = document.querySelector('#summaryTotal');
 const nextButton = document.querySelector('#nextStep');
 const backButton = document.querySelector('#backStep');
 const errorBox = document.querySelector('#orderError');
+const preferredMusic = document.querySelector('#preferredMusic');
+const customMusicField = document.querySelector('#customMusicField');
+const orderPortal = window.KarrarPortal;
+const orderAuthRequired = Boolean(window.KARRAR_PORTAL_CONFIG?.supabaseUrl && window.KARRAR_PORTAL_CONFIG?.supabaseAnonKey);
+const orderAuth = orderAuthRequired && orderPortal?.configured ? orderPortal.requireUser() : Promise.resolve(null);
+
+if (orderAuthRequired) document.querySelector('#portalLink').hidden = false;
+
+if (orderAuthRequired && !orderPortal?.configured) {
+  errorBox.textContent = 'The secure client portal could not load. Refresh the page before submitting.';
+  nextButton.disabled = true;
+}
+
+orderAuth.then(auth => {
+  if (!auth) return;
+  document.querySelector('#portalLink').textContent = 'My Projects';
+  document.querySelector('#portalLink').href = '/profile/';
+  document.querySelector('#clientName').value ||= auth.profile?.full_name || auth.user.user_metadata?.full_name || '';
+  document.querySelector('#clientEmail').value = auth.user.email || '';
+  document.querySelector('#clientEmail').readOnly = true;
+  document.querySelector('#clientCompany').value ||= auth.profile?.company || auth.user.user_metadata?.company || '';
+});
+
+preferredMusic.addEventListener('change', () => {
+  const isCustom = preferredMusic.value === 'Custom Music';
+  customMusicField.hidden = !isCustom;
+  if (!isCustom) document.querySelector('#customMusic').value = '';
+});
 
 products.innerHTML = orderServices.map(service => {
   const video = window.KARRAR_VIDEOS?.[service.id] || '';
@@ -69,6 +97,7 @@ function validateStep() {
   if (currentStep === 2 && (!field('clientName') || !field('clientEmail'))) return 'Enter your name and email address.';
   if (currentStep === 2 && !document.querySelector('#clientEmail').checkValidity()) return 'Enter a valid email address.';
   if (currentStep === 3 && (!field('projectName') || !field('projectNotes'))) return 'Enter the project name and creative notes.';
+  if (currentStep === 3 && field('preferredMusic') === 'Custom Music' && !field('customMusic')) return 'Enter your custom music preference.';
   if (currentStep === 4 && !document.querySelector('#orderConsent').checked) return 'Confirm the project-request statement before submitting.';
   return '';
 }
@@ -79,7 +108,7 @@ function renderReview() {
   document.querySelector('#orderReview').innerHTML = `
     <div class="review-block"><h2>Selected Services</h2>${services.map(item => `<p>${item.name} × ${item.quantity} — $${item.price * item.quantity}</p>`).join('')}<p><strong>Estimated total: $${total}</strong></p></div>
     <div class="review-block"><h2>Client</h2><p>${field('clientName')} · ${field('clientEmail')}</p><p>${field('clientPhone') || 'No phone provided'}${field('clientCompany') ? ` · ${field('clientCompany')}` : ''}</p></div>
-    <div class="review-block"><h2>Project</h2><p>${field('projectName')} · ${field('projectFormat')}</p><p>Deadline: ${field('projectDeadline') || 'To be discussed'}</p><p>${field('projectNotes')}</p></div>`;
+    <div class="review-block"><h2>Project</h2><p>${field('projectName')} · ${field('projectFormat')}</p><p>Music: ${field('preferredMusic') === 'Custom Music' ? field('customMusic') : (field('preferredMusic') || 'To be discussed')}</p><p>${field('projectNotes')}</p></div>`;
 }
 
 function showStep(step) {
@@ -94,21 +123,88 @@ function showStep(step) {
   scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function submitRequest() {
+async function submitRequest() {
   const services = selectedServices();
   const total = services.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const auth = await orderAuth;
+  if (orderAuthRequired && !auth) return;
   const body = [
     'NEW VIDEO EDITING PROJECT REQUEST', '',
     `Client: ${field('clientName')}`, `Email: ${field('clientEmail')}`, `Phone/WhatsApp: ${field('clientPhone') || 'Not provided'}`, `Company: ${field('clientCompany') || 'Not provided'}`, '',
     'SELECTED SERVICES', ...services.map(item => `- ${item.name} x ${item.quantity}: $${item.price * item.quantity}`), `Estimated Total: $${total}`, '',
-    `Project: ${field('projectName')}`, `Format: ${field('projectFormat')}`, `Preferred Deadline: ${field('projectDeadline') || 'To be discussed'}`, `Footage Link: ${field('footageLink') || 'Not provided'}`, `Reference Link: ${field('referenceLink') || 'Not provided'}`, '',
+    `Project: ${field('projectName')}`, `Format: ${field('projectFormat')}`, `Preferred Music: ${field('preferredMusic') === 'Custom Music' ? field('customMusic') : (field('preferredMusic') || 'To be discussed')}`, `Footage Link: ${field('footageLink') || 'Not provided'}`, `Reference Link: ${field('referenceLink') || 'Not provided'}`, '',
     'CREATIVE NOTES', field('projectNotes')
   ].join('\n');
-  window.location.href = `mailto:karrarvisuals@gmail.com?subject=${encodeURIComponent(`Project Request — ${field('projectName')}`)}&body=${encodeURIComponent(body)}`;
+  let projectId = '';
+  if (orderAuthRequired) {
+    nextButton.disabled = true;
+    nextButton.textContent = 'Saving Project...';
+    const music = field('preferredMusic') === 'Custom Music' ? field('customMusic') : field('preferredMusic');
+    const { data, error } = await orderPortal.client.from('projects').insert({
+      client_id: auth.user.id,
+      client_name: field('clientName'),
+      client_email: field('clientEmail'),
+      phone: field('clientPhone') || null,
+      company: field('clientCompany') || null,
+      project_name: field('projectName'),
+      format: field('projectFormat'),
+      preferred_music: music || null,
+      footage_link: field('footageLink') || null,
+      reference_link: field('referenceLink') || null,
+      creative_notes: field('projectNotes'),
+      services: services.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
+      estimated_total: total
+    }).select('id').single();
+    if (error) {
+      errorBox.textContent = `Your project could not be saved: ${error.message}`;
+      nextButton.disabled = false;
+      nextButton.textContent = 'Submit Project Request';
+      return;
+    }
+    projectId = data.id;
+  }
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'https://api.web3forms.com/submit';
+  form.hidden = true;
+  const fields = {
+    access_key: '4bf845f0-5cd9-4115-9aea-60643021b831',
+    subject: `New Project Request — ${field('projectName')}`,
+    from_name: 'Karrar Enterprises Website',
+    name: field('clientName'),
+    email: field('clientEmail'),
+    replyto: field('clientEmail'),
+    phone: field('clientPhone') || 'Not provided',
+    company: field('clientCompany') || 'Not provided',
+    project_id: projectId || 'Email-only submission',
+    message: `${projectId ? `Project ID: ${projectId}\n\n` : ''}${body}`,
+    redirect: `${location.origin}/project-submitted/`
+  };
+  Object.entries(fields).forEach(([name, value]) => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  nextButton.disabled = true;
+  nextButton.textContent = 'Submitting...';
+  errorBox.textContent = '';
+  form.submit();
 }
 
 nextButton.addEventListener('click', () => { const error = validateStep(); if (error) { errorBox.textContent = error; return; } if (currentStep < 4) showStep(currentStep + 1); else submitRequest(); });
 backButton.addEventListener('click', () => { if (currentStep > 1) showStep(currentStep - 1); });
+
+const successModal = document.querySelector('#orderSuccessModal');
+function closeSuccessModal() {
+  successModal.hidden = true;
+  document.body.classList.remove('order-success-open');
+  nextButton.focus();
+}
+successModal.addEventListener('click', event => { if (event.target.closest('[data-close-success]')) closeSuccessModal(); });
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && !successModal.hidden) closeSuccessModal(); });
 
 const requested = new URLSearchParams(location.search).get('service');
 if (requested && orderServices.some(item => item.id === requested)) {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Start Your Order · Karrar Enterprises</title>
   <meta name="description" content="Select your video-editing services and send your project details to Karrar Enterprises.">
-  <link rel="icon" href="/assets/karrar/logo.png">
+  <link rel="icon" type="image/png" href="/assets/karrar/favicon-black.png">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/media-updates.css">
   <link rel="stylesheet" href="/order.css">
@@ -15,7 +15,7 @@
   <header class="order-header">
     <nav class="order-nav shell">
       <a class="order-brand" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Enterprises</span></a>
-      <div class="order-nav-actions"><a href="/">← Back to Site</a><a class="button button-gold button-small" href="/book-a-call/">Book A Call</a></div>
+      <div class="order-nav-actions"><a href="/">← Back to Site</a><a id="portalLink" href="/login/?next=/order/" hidden>Client Login</a><a class="button button-gold button-small" href="/book-a-call/">Book A Call</a></div>
     </nav>
   </header>
 
@@ -48,7 +48,8 @@
             <div class="order-form-grid">
               <label class="wide"><span>Project Name *</span><input id="projectName" required></label>
               <label><span>Preferred Format</span><select id="projectFormat"><option>Vertical · 9:16</option><option>Landscape · 16:9</option><option>Square · 1:1</option><option>Multiple Formats</option></select></label>
-              <label><span>Preferred Deadline</span><input id="projectDeadline" type="date"></label>
+              <label><span>Preferred Music</span><select id="preferredMusic"><option value="">Select music</option><option>Custom Music</option><option>Pop</option><option>Rock</option><option>Hip-Hop</option><option>Jazz</option><option>Classical</option></select></label>
+              <label class="wide" id="customMusicField" hidden><span>Custom Music *</span><input id="customMusic" placeholder="Enter a song, artist, link, or music direction"></label>
               <label class="wide"><span>Footage / Cloud Storage Link</span><input id="footageLink" type="url" placeholder="https://drive.google.com/..."></label>
               <label class="wide"><span>Reference Video Link</span><input id="referenceLink" type="url" placeholder="https://..."></label>
               <label class="wide"><span>Creative Notes *</span><textarea id="projectNotes" rows="7" required placeholder="Describe the style, pacing, music, branding, deliverables, and anything else we should know."></textarea></label>
@@ -61,7 +62,7 @@
             <label class="order-consent"><input id="orderConsent" type="checkbox"> <span>I understand this is a project request, not an automatic charge. Final scope, pricing, and payment will be confirmed directly.</span></label>
           </section>
 
-          <div class="order-controls"><button class="button button-outline button-large" id="backStep" type="button" hidden>Back</button><button class="button button-gold button-large" id="nextStep" type="button">Continue</button></div>
+          <div class="order-controls"><button class="button button-outline button-large" id="backStep" type="button" hidden style="color: #8b7cff;" >Back</button><button class="button button-gold button-large" id="nextStep" type="button">Continue</button></div>
           <p class="order-error" id="orderError" role="alert"></p>
         </div>
 
@@ -74,9 +75,30 @@
       </div>
     </div>
   </main>
+
+  <div class="order-success-modal" id="orderSuccessModal" hidden>
+    <div class="order-success-backdrop" data-close-success></div>
+    <section class="order-success-card" role="dialog" aria-modal="true" aria-labelledby="orderSuccessTitle">
+      <button class="order-success-close" type="button" aria-label="Close" data-close-success>×</button>
+      <img src="/assets/karrar/logo.png" alt="Karrar Enterprises">
+      <p class="kicker">Request Received</p>
+      <h2 id="orderSuccessTitle">Project Submitted Successfully!</h2>
+      <p>Thank you for submitting your project. Your request has been received successfully.</p>
+      <p>You’ll receive a confirmation message shortly. If you’d like to confirm your submission or have any questions, feel free to reach out to us via Instagram or WhatsApp.</p>
+      <p>Once your project is ready to begin, you’ll also receive your invoice and further project details.</p>
+      <p>We’re looking forward to working with you!</p>
+      <div class="order-success-socials">
+        <a href="https://www.instagram.com/karrarvisuals/" target="_blank" rel="noopener" aria-label="Karrar Visuals on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" class="fill-icon"/></svg><span>Instagram</span></a>
+        <a href="https://wa.me/923499535028" target="_blank" rel="noopener" aria-label="Contact Karrar Enterprises on WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.4-4.7a8.5 8.5 0 1 1 16.1-4.1Z"/><path d="M8.2 7.8c.2-.5.4-.5.8-.5h.4c.2 0 .4 0 .5.4l.7 1.7c.1.3.1.5-.1.7l-.5.6c-.2.2-.2.4 0 .7.6 1.1 1.5 2 2.6 2.6.3.2.5.2.7 0l.7-.8c.2-.3.5-.3.7-.2l1.7.8c.3.2.5.3.5.5 0 .3-.2 1.5-1 2.1-.7.6-1.6.8-2.2.7-.6-.1-2.7-.8-4.6-2.5-2.2-2-3.5-4.4-3.6-5.1-.1-.7 0-1.3.4-1.7Z"/></svg><span>WhatsApp</span></a>
+      </div>
+    </section>
+  </div>
   <script defer src="/_vercel/insights/script.js"></script>
   <script src="/video-config.js"></script>
   <script src="/video-viewer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/portal-config.js"></script>
+  <script src="/portal.js"></script>
   <script src="/order.js"></script>
 </body>
 </html>
