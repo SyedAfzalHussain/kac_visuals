@@ -5,7 +5,8 @@ const tabs = document.querySelectorAll('[data-auth-tab]');
 const signinForm = document.querySelector('#signinForm');
 const signupForm = document.querySelector('#signupForm');
 const resetForm = document.querySelector('#resetForm');
-let recoveryMode = false;
+const authRedirect = `${portal.config.siteUrl || location.origin}/login/`;
+let recoveryMode = new URLSearchParams(location.search).get('mode') === 'recovery' || new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
 
 function setMessage(text, type = '') {
   message.textContent = text;
@@ -22,6 +23,10 @@ function showTab(name) {
 }
 
 tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.authTab)));
+if (recoveryMode) {
+  showTab('reset');
+  setMessage('Choose a new password for your account.');
+}
 
 if (!portal.configured) {
   setupNotice.hidden = false;
@@ -51,7 +56,7 @@ signupForm.addEventListener('submit', async event => {
   event.preventDefault();
   setMessage('Creating your account...');
   const email = document.querySelector('#signupEmail').value.trim();
-  const { data, error } = await portal.client.auth.signUp({ email, password: document.querySelector('#signupPassword').value, options: { data: { full_name: document.querySelector('#signupName').value.trim(), company: document.querySelector('#signupCompany').value.trim() }, emailRedirectTo: `${location.origin}/login/` } });
+  const { data, error } = await portal.client.auth.signUp({ email, password: document.querySelector('#signupPassword').value, options: { data: { full_name: document.querySelector('#signupName').value.trim(), company: document.querySelector('#signupCompany').value.trim() }, emailRedirectTo: authRedirect } });
   if (error) return setMessage(error.message, 'error');
   if (data.session) location.replace(portal.safeNext());
   else setMessage('Account created. Check your email to confirm your account, then sign in.', 'success');
@@ -60,7 +65,7 @@ signupForm.addEventListener('submit', async event => {
 document.querySelector('#forgotPassword').addEventListener('click', async () => {
   const email = document.querySelector('#signinEmail').value.trim();
   if (!email) return setMessage('Enter your email address first.', 'error');
-  const { error } = await portal.client.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/login/` });
+  const { error } = await portal.client.auth.resetPasswordForEmail(email, { redirectTo: `${authRedirect}?mode=recovery` });
   setMessage(error ? error.message : 'Password reset instructions have been sent.', error ? 'error' : 'success');
 });
 

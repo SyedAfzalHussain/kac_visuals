@@ -35,25 +35,18 @@
 
           <section class="order-step" data-step="2">
             <div class="order-heading"><p class="kicker">Step 02</p><h1>Your Details</h1><p>Tell us who we should contact about this project.</p></div>
+            <div class="order-auth-note" id="orderAuthNote"><strong>Want to track your projects?</strong><span><a href="/login/?next=/order/">Log in or create an account</a> before submitting. You can also continue as a guest.</span></div>
             <div class="order-form-grid">
               <label><span>Full Name *</span><input id="clientName" autocomplete="name" required></label>
               <label><span>Email Address *</span><input id="clientEmail" type="email" autocomplete="email" required></label>
-              <label><span>Phone / WhatsApp</span><input id="clientPhone" type="tel" autocomplete="tel"></label>
               <label><span>Company</span><input id="clientCompany" autocomplete="organization"></label>
             </div>
           </section>
 
           <section class="order-step" data-step="3">
-            <div class="order-heading"><p class="kicker">Step 03</p><h1>Project Information</h1><p>Share the essentials. Final files and instructions can also be provided after confirmation.</p></div>
-            <div class="order-form-grid">
-              <label class="wide"><span>Project Name *</span><input id="projectName" required></label>
-              <label><span>Preferred Format</span><select id="projectFormat"><option>Vertical · 9:16</option><option>Landscape · 16:9</option><option>Square · 1:1</option><option>Multiple Formats</option></select></label>
-              <label><span>Preferred Music</span><select id="preferredMusic"><option value="">Select music</option><option>Custom Music</option><option>Pop</option><option>Rock</option><option>Hip-Hop</option><option>Jazz</option><option>Classical</option></select></label>
-              <label class="wide" id="customMusicField" hidden><span>Custom Music *</span><input id="customMusic" placeholder="Enter a song, artist, link, or music direction"></label>
-              <label class="wide"><span>Footage / Cloud Storage Link</span><input id="footageLink" type="url" placeholder="https://drive.google.com/..."></label>
-              <label class="wide"><span>Reference Video Link</span><input id="referenceLink" type="url" placeholder="https://..."></label>
-              <label class="wide"><span>Creative Notes *</span><textarea id="projectNotes" rows="7" required placeholder="Describe the style, pacing, music, branding, deliverables, and anything else we should know."></textarea></label>
-            </div>
+            <div class="order-heading"><p class="kicker">Step 03</p><h1 id="projectStepTitle">Project Information</h1><p id="projectStepIntro">Share the essentials. Final files and instructions can also be provided after confirmation.</p></div>
+            <div class="project-contact"><label><span>Phone / WhatsApp *</span><input id="clientPhone" type="tel" autocomplete="tel" required placeholder="Include country code"></label></div>
+            <div class="project-forms" id="projectForms"></div>
           </section>
 
           <section class="order-step" data-step="4">
@@ -71,6 +64,7 @@
           <div id="summaryItems" class="summary-items"><p class="summary-empty">Add a service to get started.</p></div>
           <div class="summary-total"><span>Estimated Total</span><strong id="summaryTotal">$0</strong></div>
           <small>Final pricing is confirmed after reviewing your footage and requirements.</small>
+          <button class="button button-gold button-large summary-continue" id="summaryNextStep" type="button">Continue</button>
         </aside>
       </div>
     </div>
