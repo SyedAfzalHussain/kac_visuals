@@ -9,6 +9,10 @@ const socialAuth = document.querySelector('#socialAuth');
 const googleButton = document.querySelector('#googleSignIn');
 const authRedirect = `${portal.config.siteUrl || location.origin}/login/`;
 let recoveryMode = new URLSearchParams(location.search).get('mode') === 'recovery' || new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
+let redirecting = false;
+const callbackHash = new URLSearchParams(location.hash.slice(1));
+const callbackQuery = new URLSearchParams(location.search);
+const callbackError = callbackHash.get('error_description') || callbackQuery.get('error_description');
 
 function setMessage(text, type = '') {
   message.textContent = text;
@@ -31,10 +35,19 @@ function nextDestination() {
   return stored || portal.safeNext();
 }
 
+function finishSignIn() {
+  if (redirecting || recoveryMode) return;
+  redirecting = true;
+  setMessage('Signed in. Opening your projects...', 'success');
+  setTimeout(() => location.replace(nextDestination()), 0);
+}
+
 tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.authTab)));
 if (recoveryMode) {
   showTab('reset');
   setMessage('Choose a new password for your account.');
+} else if (callbackError) {
+  setMessage(callbackError, 'error');
 }
 
 if (!portal.configured) {
@@ -42,16 +55,18 @@ if (!portal.configured) {
   document.querySelectorAll('form button').forEach(button => button.disabled = true);
   googleButton.disabled = true;
 } else {
-  portal.client.auth.onAuthStateChange((event) => {
+  portal.client.auth.onAuthStateChange((event, session) => {
     if (event === 'PASSWORD_RECOVERY') {
       recoveryMode = true;
       showTab('reset');
       setMessage('Choose a new password for your account.');
+    } else if (event === 'SIGNED_IN' && session?.user) {
+      finishSignIn();
     }
   });
-  setTimeout(() => portal.user().then(user => {
-    if (user && !recoveryMode) location.replace(nextDestination());
-  }), 250);
+  portal.client.auth.getSession().then(({ data }) => {
+    if (data.session?.user) finishSignIn();
+  });
 }
 
 signinForm.addEventListener('submit', async event => {
@@ -59,7 +74,7 @@ signinForm.addEventListener('submit', async event => {
   setMessage('Signing in...');
   const { error } = await portal.client.auth.signInWithPassword({ email: document.querySelector('#signinEmail').value.trim(), password: document.querySelector('#signinPassword').value });
   if (error) return setMessage(error.message, 'error');
-  location.replace(nextDestination());
+  finishSignIn();
 });
 
 googleButton.addEventListener('click', async () => {
@@ -81,7 +96,7 @@ signupForm.addEventListener('submit', async event => {
   const email = document.querySelector('#signupEmail').value.trim();
   const { data, error } = await portal.client.auth.signUp({ email, password: document.querySelector('#signupPassword').value, options: { data: { full_name: document.querySelector('#signupName').value.trim(), company: document.querySelector('#signupCompany').value.trim() }, emailRedirectTo: authRedirect } });
   if (error) return setMessage(error.message, 'error');
-  if (data.session) location.replace(portal.safeNext());
+  if (data.session) finishSignIn();
   else setMessage('Account created. Check your email to confirm your account, then sign in.', 'success');
 });
 
