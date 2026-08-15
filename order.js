@@ -21,6 +21,7 @@ const nextButton = document.querySelector('#nextStep');
 const summaryNextButton = document.querySelector('#summaryNextStep');
 const backButton = document.querySelector('#backStep');
 const errorBox = document.querySelector('#orderError');
+const phoneInput = document.querySelector('#clientPhone');
 const portalLink = document.querySelector('#portalLink');
 const orderPortal = window.KarrarPortal;
 let signedInAuth = null;
@@ -46,6 +47,19 @@ orderAuth.then(auth => {
   document.querySelector('#clientEmail').readOnly = true;
   document.querySelector('#clientCompany').value ||= auth.profile?.company || auth.user.user_metadata?.company || '';
 });
+
+phoneInput.addEventListener('input', () => {
+  const firstDigit = phoneInput.value.search(/\d/);
+  const leadingPlus = phoneInput.value.includes('+') && (firstDigit === -1 || phoneInput.value.indexOf('+') < firstDigit);
+  const value = phoneInput.value.replace(/[^0-9+()\-\s]/g, '').replace(/\+/g, '');
+  phoneInput.value = `${leadingPlus ? '+' : ''}${value.trimStart()}`;
+});
+
+function validPhone() {
+  const value = field('clientPhone');
+  const digitCount = value.replace(/\D/g, '').length;
+  return /^\+?[0-9()\-\s]+$/.test(value) && digitCount >= 7 && digitCount <= 15;
+}
 
 products.innerHTML = orderServices.map(service => {
   const video = window.KARRAR_VIDEOS?.[service.id] || '';
@@ -215,7 +229,7 @@ function validateStep() {
   if (currentStep === 2 && (!field('clientName') || !field('clientEmail'))) return 'Enter your name and email address.';
   if (currentStep === 2 && !document.querySelector('#clientEmail').checkValidity()) return 'Enter a valid email address.';
   if (currentStep === 3) {
-    if (!field('clientPhone')) return 'Enter your phone or WhatsApp number.';
+    if (!validPhone()) return 'Enter a valid phone or WhatsApp number containing 7–15 digits.';
     const projects = projectDetails();
     const invalidIndex = projects.findIndex(project => !project.projectName || !project.notes || (project.isCustomMusic && !project.music));
     if (invalidIndex !== -1) {
@@ -303,6 +317,7 @@ async function submitRequest() {
       color_profile: project.colorProfile || null,
       ai_addon_scenes: project.aiScenes,
       ai_addon_price: project.aiPrice,
+      payment_status: 'unpaid',
       status: 'submitted',
       admin_notes: null
     }));

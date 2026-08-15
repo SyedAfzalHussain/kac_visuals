@@ -11,6 +11,7 @@ alter table public.projects add column if not exists aimed_length integer;
 alter table public.projects add column if not exists color_profile text;
 alter table public.projects add column if not exists ai_addon_scenes integer not null default 0;
 alter table public.projects add column if not exists ai_addon_price numeric(10,2) not null default 0;
+alter table public.projects add column if not exists payment_status text not null default 'unpaid' check (payment_status in ('unpaid','invoice_sent','partially_paid','paid','refunded'));
 
 drop policy if exists "Clients create own projects" on public.projects;
 create policy "Clients create own projects"
@@ -19,7 +20,9 @@ with check (
   (select auth.uid()) = client_id
   and status = 'submitted'
   and admin_notes is null
-  and char_length(phone) between 5 and 50
+  and payment_status = 'unpaid'
+  and phone ~ '^\+?[-0-9() ]+$'
+  and char_length(regexp_replace(phone, '[^0-9]', '', 'g')) between 7 and 15
   and aimed_length between 1 and 600
   and ai_addon_scenes between 0 and 5
   and ai_addon_price = ai_addon_scenes * 5
@@ -32,12 +35,14 @@ with check (
   client_id is null
   and status = 'submitted'
   and admin_notes is null
+  and payment_status = 'unpaid'
   and char_length(client_name) between 1 and 200
   and char_length(client_email) between 3 and 320
   and client_email like '%@%'
   and char_length(project_name) between 1 and 200
   and char_length(creative_notes) between 1 and 10000
-  and char_length(phone) between 5 and 50
+  and phone ~ '^\+?[-0-9() ]+$'
+  and char_length(regexp_replace(phone, '[^0-9]', '', 'g')) between 7 and 15
   and project_number between 1 and 100
   and aimed_length between 1 and 600
   and ai_addon_scenes between 0 and 5

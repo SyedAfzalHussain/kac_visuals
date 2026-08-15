@@ -5,6 +5,8 @@ const tabs = document.querySelectorAll('[data-auth-tab]');
 const signinForm = document.querySelector('#signinForm');
 const signupForm = document.querySelector('#signupForm');
 const resetForm = document.querySelector('#resetForm');
+const socialAuth = document.querySelector('#socialAuth');
+const googleButton = document.querySelector('#googleSignIn');
 const authRedirect = `${portal.config.siteUrl || location.origin}/login/`;
 let recoveryMode = new URLSearchParams(location.search).get('mode') === 'recovery' || new URLSearchParams(location.hash.slice(1)).get('type') === 'recovery';
 
@@ -19,7 +21,14 @@ function showTab(name) {
   signupForm.hidden = name !== 'signup';
   resetForm.hidden = name !== 'reset';
   document.querySelector('.auth-tabs').hidden = name === 'reset';
+  socialAuth.hidden = name === 'reset';
   setMessage('');
+}
+
+function nextDestination() {
+  const stored = sessionStorage.getItem('karrar_oauth_next');
+  if (stored) sessionStorage.removeItem('karrar_oauth_next');
+  return stored || portal.safeNext();
 }
 
 tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.authTab)));
@@ -31,6 +40,7 @@ if (recoveryMode) {
 if (!portal.configured) {
   setupNotice.hidden = false;
   document.querySelectorAll('form button').forEach(button => button.disabled = true);
+  googleButton.disabled = true;
 } else {
   portal.client.auth.onAuthStateChange((event) => {
     if (event === 'PASSWORD_RECOVERY') {
@@ -40,7 +50,7 @@ if (!portal.configured) {
     }
   });
   setTimeout(() => portal.user().then(user => {
-    if (user && !recoveryMode) location.replace(portal.safeNext());
+    if (user && !recoveryMode) location.replace(nextDestination());
   }), 250);
 }
 
@@ -49,7 +59,20 @@ signinForm.addEventListener('submit', async event => {
   setMessage('Signing in...');
   const { error } = await portal.client.auth.signInWithPassword({ email: document.querySelector('#signinEmail').value.trim(), password: document.querySelector('#signinPassword').value });
   if (error) return setMessage(error.message, 'error');
-  location.replace(portal.safeNext());
+  location.replace(nextDestination());
+});
+
+googleButton.addEventListener('click', async () => {
+  if (!portal.configured) return setMessage('Google sign-in is not configured.', 'error');
+  sessionStorage.setItem('karrar_oauth_next', portal.safeNext());
+  googleButton.disabled = true;
+  setMessage('Opening Google sign-in...');
+  const { error } = await portal.client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: authRedirect } });
+  if (error) {
+    sessionStorage.removeItem('karrar_oauth_next');
+    googleButton.disabled = false;
+    setMessage(error.message, 'error');
+  }
 });
 
 signupForm.addEventListener('submit', async event => {
@@ -65,7 +88,7 @@ signupForm.addEventListener('submit', async event => {
 document.querySelector('#forgotPassword').addEventListener('click', async () => {
   const email = document.querySelector('#signinEmail').value.trim();
   if (!email) return setMessage('Enter your email address first.', 'error');
-  const { error } = await portal.client.auth.resetPasswordForEmail(email, { redirectTo: `${authRedirect}?mode=recovery` });
+  const { error } = await portal.client.auth.resetPasswordForEmail(email, { redirectTo: authRedirect });
   setMessage(error ? error.message : 'Password reset instructions have been sent.', error ? 'error' : 'success');
 });
 

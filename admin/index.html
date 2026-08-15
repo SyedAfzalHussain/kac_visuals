@@ -1,1 +1,23 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Projects · Karrar Enterprises</title><meta name="description" content="Karrar Enterprises project administration."><link rel="icon" type="image/png" href="/assets/karrar/favicon-black.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/media-updates.css"><link rel="stylesheet" href="/portal.css"></head><body class="portal-page"><header class="portal-header"><nav class="portal-nav shell"><a class="portal-brand" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Admin</span></a><div class="portal-actions"><a href="/profile/">My Profile</a><button class="portal-link-button" type="button" data-signout>Sign Out</button></div></nav></header><main class="portal-main"><div class="shell"><div class="portal-heading"><p class="kicker">Administration</p><h1>Client Projects</h1><p>Review every client request and update its progress.</p></div><div class="admin-toolbar"><input id="projectSearch" type="search" placeholder="Search client, email, company, or project"><select id="statusFilter"><option value="">All statuses</option><option value="submitted">Submitted</option><option value="reviewing">Reviewing</option><option value="awaiting_files">Awaiting Files</option><option value="in_progress">In Progress</option><option value="in_review">In Review</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div><p class="portal-message" id="adminMessage"></p><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Project</th><th>Client</th><th>Services</th><th>Estimate</th><th>Submitted</th><th>Status</th></tr></thead><tbody id="adminProjects"><tr><td colspan="6">Loading projects...</td></tr></tbody></table></div></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/portal-config.js"></script><script src="/portal.js"></script><script src="/admin.js"></script><script defer src="/_vercel/insights/script.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Projects · Karrar Enterprises</title>
+  <meta name="description" content="Karrar Enterprises project administration.">
+  <link rel="icon" type="image/png" href="/assets/karrar/favicon-black.png">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/media-updates.css">
+  <link rel="stylesheet" href="/portal.css">
+</head>
+<body class="portal-page">
+  <header class="portal-header"><nav class="portal-nav shell"><a class="portal-brand" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Admin</span></a><div class="portal-actions"><a href="/profile/">My Profile</a><button class="portal-link-button" type="button" data-signout>Sign Out</button></div></nav></header>
+  <main class="portal-main"><div class="shell">
+    <div class="portal-heading"><p class="kicker">Administration</p><h1>Client Projects</h1><p>Review every client request and update its progress and payment.</p></div>
+    <div class="admin-toolbar"><input id="projectSearch" type="search" placeholder="Search client, email, company, or project"><select id="statusFilter"><option value="">All statuses</option><option value="submitted">Submitted</option><option value="reviewing">Reviewing</option><option value="awaiting_files">Awaiting Files</option><option value="in_progress">In Progress</option><option value="in_review">In Review</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+    <p class="portal-message" id="adminMessage"></p>
+    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Project</th><th>Client</th><th>Services</th><th>Estimate</th><th>Submitted</th><th>Status</th><th>Payment</th></tr></thead><tbody id="adminProjects"><tr><td colspan="7">Loading projects...</td></tr></tbody></table></div>
+  </div></main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/portal-config.js"></script><script src="/portal.js"></script><script src="/admin.js"></script><script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
