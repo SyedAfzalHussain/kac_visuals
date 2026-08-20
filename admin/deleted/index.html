@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Deleted Projects · Karrar Enterprises</title>
+  <meta name="description" content="Backup of deleted Karrar Enterprises projects.">
+  <link rel="icon" type="image/png" href="/assets/karrar/favicon-black.png">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/media-updates.css">
+  <link rel="stylesheet" href="/portal.css">
+</head>
+<body class="portal-page">
+  <header class="portal-header"><nav class="portal-nav shell"><a class="portal-brand" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Admin</span></a><div class="portal-actions"><a href="/admin/">All Projects</a><a href="/profile/">My Profile</a><button class="portal-link-button" type="button" data-signout>Sign Out</button></div></nav></header>
+  <main class="portal-main"><div class="shell">
+    <div class="portal-heading"><p class="kicker">Backup</p><h1>Deleted Projects</h1><p>Every deleted project is archived here with its full details and edit history. Restore one to move it back into the live dashboard.</p></div>
+    <div class="admin-toolbar"><input id="deletedSearch" type="search" placeholder="Search deleted project, client, or email"></div>
+    <p class="portal-message" id="deletedMessage"></p>
+    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Project</th><th>Client</th><th>Deleted</th><th>Deleted By</th><th>Actions</th></tr></thead><tbody id="deletedProjects"><tr><td colspan="6">Loading archive...</td></tr></tbody></table></div>
+  </div></main>
+
+  <dialog class="project-dialog" id="deletedDetailsDialog" aria-labelledby="deletedDetailsTitle"><button class="project-dialog-close" type="button" data-close-details aria-label="Close details">×</button><div id="deletedProjectDetails"></div></dialog>
+
+  <dialog class="project-dialog confirm-dialog" id="purgeConfirmDialog" aria-labelledby="purgeConfirmTitle">
+    <header class="portal-detail-heading"><p class="kicker">Confirm Permanent Deletion</p><h2 id="purgeConfirmTitle">Are you sure?</h2></header>
+    <p class="confirm-copy">You are about to permanently erase <strong id="purgeProjectName"></strong> from the backup. This cannot be undone and the project will not be recoverable.</p>
+    <p class="portal-message" id="purgeMessage"></p>
+    <div class="admin-dialog-actions"><button class="button button-outline button-small" type="button" data-close-purge>Cancel</button><button class="button button-small danger-button" type="button" id="confirmPurge">Yes, Erase Permanently</button></div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/portal-config.js"></script><script src="/portal.js"></script><script src="/admin-deleted.js"></script><script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

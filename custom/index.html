@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Custom Project · Karrar Enterprises</title>
+  <meta name="description" content="For projects outside our standard packages, describe what you're looking for and we'll send you a custom quote.">
+  <link rel="icon" type="image/png" href="/assets/karrar/favicon-black.png">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/pages.css">
+  <link rel="stylesheet" href="/media-updates.css">
+</head>
+<body>
+  <header class="site-header inner-header" id="header"><nav class="nav shell"><a href="/" class="brand"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"></a><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/about/">About</a></li><li><a href="/#black-label">Why Us</a></li><li><a href="/privacy-policy/">Privacy Policy</a></li><li><a href="/#a-la-carte">Services</a></li></ul><div class="nav-actions"><a class="button button-small button-outline" href="#contact-details" data-contact-modal>Contact</a><a class="button button-small button-gold" href="/login/">Login / Sign Up</a></div><button class="menu-toggle" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button></nav><div class="mobile-menu"><a href="/">Home</a><a href="/about/">About</a><a href="/#black-label">Why Us</a><a href="/privacy-policy/">Privacy Policy</a><a href="/#a-la-carte">Services</a><div class="mobile-actions"><a class="button button-outline" href="#contact-details" data-contact-modal>Contact</a><a class="button button-gold" href="/login/">Login / Sign Up</a></div></div></header>
+
+  <main>
+    <section class="page-hero custom-hero"><div class="shell reveal"><p class="kicker">Custom Project</p><h1>Tell Us What You Need.</h1><p>For projects outside our standard packages, describe what you're looking for and we'll send you a custom quote.</p></div></section>
+
+    <section class="custom-form-section page-section">
+      <div class="shell">
+        <div class="custom-steps" id="customSteps">
+          <div class="custom-step active" data-step-marker="1"><span class="custom-step-num">1</span><span class="custom-step-label">About You</span></div>
+          <span class="custom-step-line"></span>
+          <div class="custom-step" data-step-marker="2"><span class="custom-step-num">2</span><span class="custom-step-label">Your Project</span></div>
+        </div>
+
+        <form class="custom-panel" id="customForm" novalidate>
+          <fieldset class="custom-fieldset" data-step="1" style="border: none;">
+            <div class="custom-form-grid">
+              <label><span>Full Name *</span><input id="customName" type="text" autocomplete="name" required></label>
+              <label><span>Email *</span><input id="customEmail" type="email" autocomplete="email" required></label>
+              <label><span>Phone *</span><input id="customPhone" type="tel" autocomplete="tel" required></label>
+              <label><span>Company Name</span><input id="customCompany" type="text" autocomplete="organization"></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="custom-fieldset" data-step="2" hidden style="border: none;">
+            <div class="custom-form-grid custom-form-grid--single">
+              <label><span>Project Name *</span><input id="customProjectName" type="text" placeholder="e.g. 123 Ocean Drive Listing Video" required></label>
+              <label><span>Project Description *</span><textarea id="customDetails" rows="5" placeholder="Tell us about your project. What type of video do you need? Any specific style, music, or editing preferences?" required></textarea></label>
+              <label><span>Number Of Videos *</span><input id="customVideoCount" type="number" min="1" placeholder="How many videos do you need?" required></label>
+              <label><span>Reference Videos</span><input id="customReference" type="text" placeholder="Links to reference videos or examples you like"></label>
+              <label><span>Files Link</span><input id="customFilesLink" type="url" placeholder="Google Drive or Dropbox link to your footage"><small class="custom-hint"><span>*</span> Uploaded files cannot be above 175 gigabytes.</small></label>
+              <label><span>Anything Else?</span><textarea id="customComments" rows="3" placeholder="Anything else we should know?"></textarea></label>
+            </div>
+          </fieldset>
+
+          <div class="custom-success" id="customSuccess" hidden>
+            <span class="custom-success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <p class="kicker">Request Received</p>
+            <h2>We've received your project request.</h2>
+            <p>Our team will review your details and send you a custom quote, usually within 24 hours.</p>
+            <a class="button button-gold button-large" href="/">Back To Home</a>
+          </div>
+
+          <p class="custom-error" id="customError" role="alert"></p>
+
+          <div class="custom-controls" id="customControls">
+            <button class="button button-outline button-large" id="customBack" type="button" hidden style="color: #8b7cff;">← Back</button>
+            <button class="button button-gold button-large" id="customNext" type="button">Continue →</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="shell footer-main"><a class="footer-logo" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"></a><div class="footer-columns"><div><h4>Karrar Enterprises</h4><p>Premium real estate and social media video editing.</p><a class="instagram" href="https://wa.me/923499535028">◉</a></div><div><h4>Navigate</h4><a href="/">Home</a><a href="/about/">About</a><a href="/#a-la-carte">Services</a><a href="tel:+14028087996">Call</a><a href="mailto:karrarvisuals@gmail.com">Contact Us</a></div></div></div><div class="footer-bottom"><div class="shell"><span>© Karrar Enterprises 2026. All rights reserved.</span><div><a href="tel:+14028087996">+1 402 808 7996</a><span><a href="mailto:karrarvisuals@gmail.com">Email</a></span></div></div></div></footer>
+
+  <script src="/contact-modal.js"></script>
+  <script src="/page.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/portal-config.js"></script>
+  <script src="/portal.js"></script>
+  <script src="/custom.js"></script>
+</body>
+</html>
