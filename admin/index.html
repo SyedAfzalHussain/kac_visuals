@@ -23,17 +23,17 @@
 
   <dialog class="project-dialog" id="projectEditDialog" aria-labelledby="projectEditTitle">
     <button class="project-dialog-close" type="button" data-close-edit aria-label="Close editor">×</button>
-    <header class="portal-detail-heading"><p class="kicker">Edit Project</p><h2 id="projectEditTitle">Edit</h2></header>
+    <header class="portal-detail-heading"><p class="kicker" style="color: #8b7cff;">Edit Project</p><h2 id="projectEditTitle">Edit</h2></header>
     <form id="projectEditForm" class="admin-edit-form"></form>
     <p class="portal-message" id="editMessage"></p>
-    <div class="admin-dialog-actions"><button class="button button-outline button-small" type="button" data-close-edit>Cancel</button><button class="button button-gold button-small" type="button" id="saveProjectEdit">Save Changes</button></div>
+    <div class="admin-dialog-actions"><button class="button button-outline button-small" type="button" data-close-edit style="color: #8b7cff;">Cancel</button><button class="button button-gold button-small" type="button" id="saveProjectEdit">Save Changes</button></div>
   </dialog>
 
   <dialog class="project-dialog confirm-dialog" id="deleteConfirmDialog" aria-labelledby="deleteConfirmTitle">
     <header class="portal-detail-heading"><p class="kicker">Confirm Deletion</p><h2 id="deleteConfirmTitle">Are you sure?</h2></header>
     <p class="confirm-copy">You are about to delete <strong id="deleteProjectName"></strong>. A full backup is kept on the <a href="/admin/deleted/">Deleted Projects</a> page and can be restored later.</p>
     <p class="portal-message" id="deleteMessage"></p>
-    <div class="admin-dialog-actions"><button class="button button-outline button-small" type="button" data-close-delete>Cancel</button><button class="button button-small danger-button" type="button" id="confirmDelete">Yes, Delete Project</button></div>
+    <div class="admin-dialog-actions"><button class="button button-outline button-small" type="button" data-close-delete style="color: #8b7cff;">Cancel</button><button class="button button-small danger-button" type="button" id="confirmDelete">Yes, Delete Project</button></div>
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/portal-config.js"></script><script src="/portal.js"></script><script src="/admin.js"></script><script defer src="/_vercel/insights/script.js"></script>
