@@ -16,6 +16,7 @@ const deleteMessage = document.querySelector('#deleteMessage');
 const editorsDialog = document.querySelector('#editorsDialog');
 const editorsList = document.querySelector('#editorsList');
 const editorsMessage = document.querySelector('#editorsMessage');
+const editorsSearch = document.querySelector('#editorsSearch');
 const printRoot = document.querySelector('#printRoot');
 const statuses = [['submitted','Submitted'],['reviewing','Reviewing'],['awaiting_files','Awaiting Files'],['in_progress','In Progress'],['in_review','In Review'],['completed','Completed'],['cancelled','Cancelled']];
 const paymentStatuses = [['unpaid','Unpaid'],['invoice_sent','Invoice Sent'],['partially_paid','Partially Paid'],['paid','Paid'],['refunded','Refunded']];
@@ -167,65 +168,100 @@ function openProjectDetails(project) {
   detailsDialog.showModal();
 }
 
-// --- PDF: build a branded, print-only Project Brief. AI add-on price is omitted. ---
-function printRow(label, value) {
-  return value ? `<tr><th>${escapeText(label)}</th><td>${escapeText(value)}</td></tr>` : '';
+// --- PDF: branded, print-only brief. AI add-on price is never printed.
+// variant 'full'   -> client contact + brief + notes
+// variant 'editor' -> brief + notes only (no client contact, no pricing)
+function printPair(label, value) {
+  return value ? `<div class="print-cell"><small>${escapeText(label)}</small><span>${escapeText(value)}</span></div>` : '';
 }
 
-function exportProjectPdf(project) {
+function buildPrintDoc(project, variant) {
+  const editorCopy = variant === 'editor';
   const services = servicesOf(project) || 'Not provided';
-  printRoot.innerHTML = `<article class="print-doc">
+  const aiLabel = project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'}` : 'Off';
+
+  const clientSection = editorCopy ? '' : `<section class="print-section">
+      <h2>Client</h2>
+      <div class="print-grid">
+        ${printPair('Full name', project.client_name)}
+        ${printPair('Email', project.client_email)}
+        ${printPair('Phone / WhatsApp', project.phone)}
+        ${printPair('Company', project.company)}
+      </div>
+    </section>`;
+
+  return `<article class="print-doc">
     <header class="print-head">
-      <img src="/assets/karrar/logo.png" alt="">
-      <div class="print-company">
-        <strong>Karrar Enterprises LLC</strong>
-        <span>Premium real estate &amp; social media video editing</span>
-        <span>5830 E 2nd St, Ste 7000, Casper, WY 82609, United States</span>
-        <span>karrarvisuals@gmail.com · +1 402 808 7996</span>
+      <div class="print-brand">
+        <img class="print-mark" src="/assets/karrar/favicon-black.png" alt="">
+        <div class="print-company">
+          <strong>Karrar Enterprises</strong>
+          <span>LLC · Premium Video Editing</span>
+        </div>
+      </div>
+      <div class="print-contact">
+        <span>karrarvisuals@gmail.com</span>
+        <span>+1 402 808 7996</span>
+        <span>5830 E 2nd St, Ste 7000</span>
+        <span>Casper, WY 82609, United States</span>
       </div>
     </header>
+
     <div class="print-title">
-      <span class="print-kicker">Project Brief</span>
-      <h1>${escapeText(serial(project))} · ${escapeText(project.project_name)}</h1>
-      <span class="print-status">${escapeText(labelFor(statuses, project.status))} · Submitted ${escapeText(dateTime(project.created_at))}</span>
+      <div class="print-serial">${escapeText(serial(project))}</div>
+      <div class="print-titlecopy">
+        <span class="print-kicker">Project Brief${editorCopy ? ' · Editor Copy' : ''}</span>
+        <h1>${escapeText(project.project_name)}</h1>
+        <div class="print-pills">
+          <span class="print-pill">${escapeText(labelFor(statuses, project.status))}</span>
+          <span class="print-pill ghost">Submitted ${escapeText(dateTime(project.created_at))}</span>
+          ${project.is_custom ? '<span class="print-pill ghost">Custom Project</span>' : ''}
+        </div>
+      </div>
     </div>
-    <section class="print-section">
-      <h2>Client</h2>
-      <table class="print-table">
-        ${printRow('Full name', project.client_name)}
-        ${printRow('Email', project.client_email)}
-        ${printRow('Phone / WhatsApp', project.phone)}
-        ${printRow('Company', project.company)}
-      </table>
-    </section>
+
+    ${clientSection}
+
     <section class="print-section">
       <h2>Project Brief</h2>
-      <table class="print-table">
-        ${printRow('Serial number', serial(project))}
-        ${printRow('Service', services)}
-        ${printRow('Video number', String(project.project_number || 1).padStart(2, '0'))}
-        ${printRow('Format', project.format)}
-        ${printRow('Aimed length', formatLength(project.aimed_length))}
-        ${printRow('Color profile', project.color_profile)}
-        ${printRow('Preferred music', project.preferred_music)}
-        ${printRow('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'}` : 'Off')}
-        ${printRow('Assigned editor', project.assigned_editor_name)}
-        ${printRow('Footage / project files', project.footage_link)}
-        ${printRow('Reference video', project.reference_link)}
-        ${printRow('Final video link', project.final_video_link)}
-      </table>
+      <div class="print-grid">
+        ${printPair('Service', services)}
+        ${printPair('Video number', String(project.project_number || 1).padStart(2, '0'))}
+        ${printPair('Format', project.format)}
+        ${printPair('Aimed length', formatLength(project.aimed_length))}
+        ${printPair('Color profile', project.color_profile)}
+        ${printPair('Preferred music', project.preferred_music)}
+        ${printPair('AI add-on', aiLabel)}
+        ${printPair('Assigned editor', project.assigned_editor_name)}
+      </div>
     </section>
+
+    <section class="print-section">
+      <h2>Links</h2>
+      <div class="print-grid one">
+        ${printPair('Footage / project files', project.footage_link || 'Not provided')}
+        ${printPair('Reference video', project.reference_link || 'Not provided')}
+        ${printPair('Final video link', project.final_video_link || 'Not delivered yet')}
+      </div>
+    </section>
+
     ${project.creative_notes ? `<section class="print-section"><h2>Creative Notes</h2><p class="print-notes">${escapeText(project.creative_notes)}</p></section>` : ''}
+
     <footer class="print-foot">
-      <span>Generated ${escapeText(new Date().toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' }))}</span>
-      <span>Karrar Enterprises LLC · karrarenterprisesllc.com</span>
+      <span>${editorCopy ? 'Editor copy · brief only' : 'Internal copy'} · Generated ${escapeText(new Date().toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' }))}</span>
+      <span>karrarenterprisesllc.com</span>
     </footer>
   </article>`;
+}
+
+function exportProjectPdf(project, variant = 'full') {
+  printRoot.innerHTML = buildPrintDoc(project, variant);
   document.body.classList.add('printing');
   const cleanup = () => { document.body.classList.remove('printing'); printRoot.innerHTML = ''; };
   addEventListener('afterprint', cleanup, { once: true });
   setTimeout(() => print(), 60);
 }
+
 
 // --- Excel: every stored field, one row per project. ---
 function exportExcelWorkbook() {
@@ -317,7 +353,12 @@ function openEditor(project) {
 
 function renderPeople() {
   if (!people.length) { editorsList.innerHTML = '<p class="history-empty">No registered accounts yet.</p>'; return; }
-  editorsList.innerHTML = people.map(person => `<div class="editor-row">
+  const query = editorsSearch.value.toLowerCase().trim();
+  const matches = query
+    ? people.filter(person => [person.full_name, person.email, person.role].some(value => String(value || '').toLowerCase().includes(query)))
+    : people;
+  if (!matches.length) { editorsList.innerHTML = `<p class="history-empty">No one matches “${escapeText(editorsSearch.value.trim())}”.</p>`; return; }
+  editorsList.innerHTML = matches.map(person => `<div class="editor-row">
     <div><strong>${escapeText(person.full_name || 'Unnamed')}</strong><span>${escapeText(person.email)}</span></div>
     <span class="role-badge" data-role="${person.role}">${escapeText(person.role)}</span>
     <div class="row-actions">
@@ -368,20 +409,29 @@ customToggle.addEventListener('click', () => {
   customToggle.setAttribute('aria-pressed', String(customOnly));
   customToggle.classList.toggle('active', customOnly);
   customToggle.textContent = customOnly ? '★ Showing Custom Only' : '★ Custom Projects';
+  customToggle.style.color = '#8b7cff';
   render();
 });
 
 document.querySelector('#exportExcel').addEventListener('click', exportExcelWorkbook);
 document.querySelector('#exportProjectPdf').addEventListener('click', () => {
   const project = allProjects.find(item => item.id === detailProjectId);
-  if (project) exportProjectPdf(project);
+  if (project) exportProjectPdf(project, 'full');
+});
+
+document.querySelector('#exportEditorPdf').addEventListener('click', () => {
+  const project = allProjects.find(item => item.id === detailProjectId);
+  if (project) exportProjectPdf(project, 'editor');
 });
 
 document.querySelector('#manageEditors').addEventListener('click', () => {
   editorsMessage.textContent = '';
+  editorsSearch.value = '';
   renderPeople();
   editorsDialog.showModal();
 });
+
+editorsSearch.addEventListener('input', renderPeople);
 
 editorsList.addEventListener('click', async event => {
   const button = event.target.closest('[data-set-role]');
