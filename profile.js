@@ -69,7 +69,7 @@ function renderProjects(projects) {
   if (!projects.length) { projectsList.innerHTML = '<div class="portal-empty">No projects yet. Start your first project when you’re ready.</div>'; return; }
   projectsList.innerHTML = projects.map(project => {
     const payment = project.payment_status || 'unpaid';
-    const services = (project.services || []).map(service => `${service.name} × ${service.quantity}`).join(', ') || project.service_name || 'Not provided';
+    const services = (project.services || []).map(service => `${service.name} × ${Number(service.quantity) || 0}`).join(', ') || project.service_name || 'Not provided';
     const editable = editableStatuses.includes(project.status);
     const finalUrl = safeHttpUrl(project.final_video_link);
     const edits = editsByProject.get(project.id) || [];
@@ -100,7 +100,8 @@ function openEditor(project) {
 
 async function loadProjects() {
   const [projectsResult, editsResult] = await Promise.all([
-    profilePortal.client.from('projects').select('*').order('serial_number', { ascending: false }),
+    // View, not the table: keeps internal admin notes out of the payload.
+    profilePortal.client.from('my_projects').select('*').order('serial_number', { ascending: false }),
     profilePortal.client.from('project_edits').select('*').order('created_at', { ascending: false })
   ]);
   if (projectsResult.error) {
@@ -124,7 +125,10 @@ async function loadProjects() {
   profileCard.querySelector('.profile-avatar').textContent = name.charAt(0).toUpperCase();
   profileCard.querySelector('h2').textContent = name;
   profileCard.querySelector('p').textContent = auth.user.email;
-  profileCard.querySelector('.role-badge').textContent = auth.profile?.role === 'admin' ? 'Administrator' : 'Client';
+  const roleLabels = { admin: 'Administrator', editor: 'Editor', client: 'Client' };
+  const badge = profileCard.querySelector('.role-badge');
+  badge.textContent = roleLabels[auth.profile?.role] || 'Client';
+  badge.dataset.role = auth.profile?.role || 'client';
   if (auth.profile?.role === 'admin') {
     const link = document.createElement('a'); link.className = 'button button-outline button-small'; link.href = '/admin/'; link.textContent = 'Admin Dashboard'; link.style.marginTop = '20px'; profileCard.appendChild(link);
   }

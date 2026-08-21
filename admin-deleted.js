@@ -67,7 +67,7 @@ function render() {
 
 function openDetails(entry) {
   const project = entry.project_data || {};
-  const services = (project.services || []).map(service => `${service.name} × ${service.quantity}`).join(', ') || project.service_name || 'Not provided';
+  const services = (project.services || []).map(service => `${service.name} × ${Number(service.quantity) || 0}`).join(', ') || project.service_name || 'Not provided';
   archiveDetails.innerHTML = `<header class="portal-detail-heading"><p class="kicker">Archived Backup · ${escapeText(serialOf(entry.serial_number))}</p><h2 id="deletedDetailsTitle">${escapeText(project.project_name || 'Untitled project')}</h2><div class="project-card-badges"><span class="status-badge">${escapeText(labelFor(statuses, project.status))}</span><span class="payment-badge" data-payment="${project.payment_status || 'unpaid'}">Payment · ${escapeText(labelFor(paymentStatuses, project.payment_status || 'unpaid'))}</span></div></header>
     <section class="portal-detail-section"><h3>Deletion Record</h3><div class="portal-detail-grid">${detail('Deleted at', dateTime(entry.deleted_at))}${detail('Deleted by', entry.deleted_by_name || 'Unknown')}</div></section>
     <section class="portal-detail-section"><h3>Client Contact</h3><div class="portal-detail-grid">${detail('Full name', project.client_name)}${detail('Email', project.client_email)}${detail('Phone / WhatsApp', project.phone)}${detail('Company', project.company)}${detail('Account type', project.client_id ? 'Registered client' : 'Guest')}</div></section>

@@ -69,7 +69,8 @@ function renderAssignments() {
 }
 
 async function loadAssignments() {
-  const { data, error } = await editorPortal.client.from('projects').select('*').order('serial_number', { ascending: false });
+  // Brief-only view: client contact, pricing and admin notes are never sent.
+  const { data, error } = await editorPortal.client.from('editor_assignments').select('*').order('serial_number', { ascending: false });
   if (error) {
     assignmentsList.innerHTML = `<div class="portal-empty">${escapeText(error.message)}</div>`;
     return;
