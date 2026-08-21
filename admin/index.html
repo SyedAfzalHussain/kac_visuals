@@ -14,12 +14,30 @@
   <header class="portal-header"><nav class="portal-nav shell"><a class="portal-brand" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Admin</span></a><div class="portal-actions"><a href="/admin/deleted/">Deleted Projects</a><a href="/profile/">My Profile</a><button class="portal-link-button" type="button" data-signout>Sign Out</button></div></nav></header>
   <main class="portal-main"><div class="shell">
     <div class="portal-heading"><p class="kicker">Administration</p><h1>Client Projects</h1><p>Review every client request and update its progress and payment.</p></div>
+    <div class="admin-actionbar">
+      <button class="button button-gold button-small" type="button" id="exportExcel">⤓ Export All To Excel</button>
+      <button class="button button-outline button-small" type="button" id="customToggle" aria-pressed="false">★ Custom Projects</button>
+      <button class="button button-outline button-small" type="button" id="manageEditors">Manage Editors</button>
+      <a class="button button-outline button-small" href="/admin/deleted/">Deleted Projects</a>
+    </div>
     <div class="admin-toolbar"><input id="projectSearch" type="search" placeholder="Search client, email, company, or project"><select id="clientFilter"><option value="">All clients</option></select><select id="statusFilter"><option value="">All statuses</option><option value="submitted">Submitted</option><option value="reviewing">Reviewing</option><option value="awaiting_files">Awaiting Files</option><option value="in_progress">In Progress</option><option value="in_review">In Review</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><select id="paymentFilter"><option value="">All payments</option><option value="unpaid">Unpaid</option><option value="invoice_sent">Invoice Sent</option><option value="partially_paid">Partially Paid</option><option value="paid">Paid</option><option value="refunded">Refunded</option></select></div>
     <p class="portal-message" id="adminMessage"></p>
-    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Project</th><th>Client</th><th>Services</th><th>Estimate</th><th>Submitted</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="adminProjects"><tr><td colspan="9">Loading projects...</td></tr></tbody></table></div>
+    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>#</th><th>Project</th><th>Client</th><th>Services</th><th>Estimate</th><th>Submitted</th><th>Status</th><th>Payment</th><th>Editor</th><th>Actions</th></tr></thead><tbody id="adminProjects"><tr><td colspan="10">Loading projects...</td></tr></tbody></table></div>
   </div></main>
 
-  <dialog class="project-dialog" id="projectDetailsDialog" aria-labelledby="projectDetailsTitle"><button class="project-dialog-close" type="button" data-close-project aria-label="Close project details">×</button><div id="adminProjectDetails"></div></dialog>
+  <dialog class="project-dialog" id="projectDetailsDialog" aria-labelledby="projectDetailsTitle">
+    <button class="project-dialog-close" type="button" data-close-project aria-label="Close project details">×</button>
+    <div id="adminProjectDetails"></div>
+    <div class="admin-dialog-actions"><button class="button button-gold button-small" type="button" id="exportProjectPdf">⎙ Export Project Brief (PDF)</button></div>
+  </dialog>
+
+  <dialog class="project-dialog" id="editorsDialog" aria-labelledby="editorsTitle">
+    <button class="project-dialog-close" type="button" data-close-editors aria-label="Close">×</button>
+    <header class="portal-detail-heading"><p class="kicker" style="color: #8b7cff;">Team</p><h2 id="editorsTitle">Manage Editors</h2></header>
+    <p class="confirm-copy">Anyone who has registered an account appears here. Promote a person to <strong>Editor</strong> to let them see the projects you assign to them — they get the project brief only, and can edit nothing except the final video link.</p>
+    <div id="editorsList" class="editors-list">Loading people...</div>
+    <p class="portal-message" id="editorsMessage"></p>
+  </dialog>
 
   <dialog class="project-dialog" id="projectEditDialog" aria-labelledby="projectEditTitle">
     <button class="project-dialog-close" type="button" data-close-edit aria-label="Close editor">×</button>
@@ -36,6 +54,9 @@
     <div class="admin-dialog-actions"><button class="button button-outline button-small" type="button" data-close-delete style="color: #8b7cff;">Cancel</button><button class="button button-small danger-button" type="button" id="confirmDelete">Yes, Delete Project</button></div>
   </dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/portal-config.js"></script><script src="/portal.js"></script><script src="/admin.js"></script><script defer src="/_vercel/insights/script.js"></script>
+  <div id="printRoot" aria-hidden="true"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="/portal-config.js"></script><script src="/portal.js"></script><script src="/admin.js"></script><script defer src="/_vercel/insights/script.js"></script>
+  <script src="/loader.js"></script>
 </body>
 </html>

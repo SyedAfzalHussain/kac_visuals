@@ -77,6 +77,15 @@ function escapeText(value = '') {
   return node.innerHTML;
 }
 
+// 45 -> "45s", 90 -> "1m 30s", 120 -> "2 min"
+function formatLength(seconds) {
+  const total = Number(seconds) || 0;
+  if (total < 60) return `${total}s`;
+  const minutes = Math.floor(total / 60);
+  const rest = total % 60;
+  return rest ? `${minutes}m ${rest}s` : `${minutes} min`;
+}
+
 function selectedServices() {
   return orderServices.filter(item => selections.has(item.id)).map(item => ({ ...item, quantity: selections.get(item.id) }));
 }
@@ -122,7 +131,7 @@ function renderProjectForms() {
       <label><span>Preferred Format</span><select data-field="format"><option>Vertical · 9:16</option><option>Landscape · 16:9</option><option>Square · 1:1</option><option>Multiple Formats</option></select></label>
       <label><span>Preferred Music</span><select data-field="music"><option value="">Select music</option><option>Custom Music</option><option>Pop</option><option>Rock</option><option>Hip-Hop</option><option>Jazz</option><option>Classical</option></select></label>
       <label class="wide" data-custom-music hidden><span>Custom Music *</span><input data-field="customMusic" placeholder="Enter a song, artist, link, or music direction"></label>
-      <div class="project-range-field"><div class="project-range-head"><span class="project-range-label">Aimed Length (Optional)</span><output class="project-range-value" data-aimed-output>${item.service.minLength}s</output></div><input data-field="aimedLength" type="range" min="${item.service.minLength}" max="${item.service.maxLength}" step="1"><div class="project-range-scale"><span>${item.service.minLength}s</span><span>${item.service.maxLength}s</span></div></div>
+      <div class="project-range-field"><div class="project-range-head"><span class="project-range-label">Aimed Length (Optional)</span><output class="project-range-value" data-aimed-output>${formatLength(item.service.minLength)}</output></div><input data-field="aimedLength" type="range" min="${item.service.minLength}" max="${item.service.maxLength}" step="1"><div class="project-range-scale"><span>${formatLength(item.service.minLength)}</span><span>${formatLength(item.service.maxLength)}</span></div></div>
       <label class="wide"><span>Color Profile (LOG/Camera)</span><input data-field="colorProfile" placeholder="e.g. S-Log3, Canon C-Log, Standard, V-Log"></label>
       <label class="wide"><span>Footage / Cloud Storage Link</span><input data-field="footageLink" type="url" placeholder="https://drive.google.com/..."></label>
       <label class="wide"><span>Reference Video Link</span><input data-field="referenceLink" type="url" placeholder="https://..."></label>
@@ -147,7 +156,7 @@ function renderProjectForms() {
 function updateProjectControls(block, item) {
   const aimedLength = Number(block.querySelector('[data-field="aimedLength"]').value);
   const aiScenes = Number(block.querySelector('[data-field="aiScenes"]').value);
-  block.querySelector('[data-aimed-output]').textContent = `${aimedLength}s`;
+  block.querySelector('[data-aimed-output]').textContent = formatLength(aimedLength);
   block.querySelector('[data-ai-output]').textContent = aiScenes ? `${aiScenes} scene${aiScenes === 1 ? '' : 's'} · +$${aiScenes * AI_SCENE_PRICE}` : 'Off';
   block.querySelector('[data-unit-price]').textContent = `$${item.service.price + aiScenes * AI_SCENE_PRICE}`;
 }
@@ -251,7 +260,7 @@ function renderReview() {
   document.querySelector('#orderReview').innerHTML = `
     <div class="review-block"><h2>Selected Services</h2>${services.map(item => `<p>${escapeText(item.name)} × ${item.quantity} — $${item.price * item.quantity}</p>`).join('')}${aiScenes ? `<p>AI Add-On · ${aiScenes} scene${aiScenes === 1 ? '' : 's'} — $${aiScenes * AI_SCENE_PRICE}</p>` : ''}<p><strong>Estimated total: $${total}</strong></p></div>
     <div class="review-block"><h2>Client</h2><p>${escapeText(field('clientName'))} · ${escapeText(field('clientEmail'))}</p><p>${escapeText(field('clientPhone'))}${field('clientCompany') ? ` · ${escapeText(field('clientCompany'))}` : ''}</p></div>
-    ${projects.map(project => `<div class="review-block"><span class="review-project-number">Video ${String(project.number).padStart(2, '0')} · ${escapeText(project.service.name)} · $${project.service.price + project.aiPrice}</span><h2>${escapeText(project.projectName)}</h2><p>${escapeText(project.format || 'Format to be discussed')} · Aimed length: ${project.aimedLength}s</p><p>Music: ${escapeText(project.music || 'To be discussed')}</p><p>Color profile: ${escapeText(project.colorProfile || 'Not provided')}</p><p>AI add-on: ${project.aiScenes ? `${project.aiScenes} scene${project.aiScenes === 1 ? '' : 's'} (+$${project.aiPrice})` : 'Off'}</p><p>${escapeText(project.notes)}</p></div>`).join('')}`;
+    ${projects.map(project => `<div class="review-block"><span class="review-project-number">Video ${String(project.number).padStart(2, '0')} · ${escapeText(project.service.name)} · $${project.service.price + project.aiPrice}</span><h2>${escapeText(project.projectName)}</h2><p>${escapeText(project.format || 'Format to be discussed')} · Aimed length: ${formatLength(project.aimedLength)}</p><p>Music: ${escapeText(project.music || 'To be discussed')}</p><p>Color profile: ${escapeText(project.colorProfile || 'Not provided')}</p><p>AI add-on: ${project.aiScenes ? `${project.aiScenes} scene${project.aiScenes === 1 ? '' : 's'} (+$${project.aiPrice})` : 'Off'}</p><p>${escapeText(project.notes)}</p></div>`).join('')}`;
 }
 
 function setNextButtons(text, disabled = false) {
@@ -288,7 +297,7 @@ async function submitRequest() {
     `PROJECTS (${projects.length})`, `Estimated Total: $${total}`, '',
     ...projects.flatMap(project => [
       `VIDEO ${String(project.number).padStart(2, '0')} — ${project.service.name} ($${project.service.price + project.aiPrice})`,
-      `Project Name: ${project.projectName}`, `Format: ${project.format || 'To be discussed'}`, `Aimed Length: ${project.aimedLength}s`, `Color Profile (LOG/Camera): ${project.colorProfile || 'Not provided'}`, `Preferred Music: ${project.music || 'To be discussed'}`, `AI Add-On: ${project.aiScenes ? `${project.aiScenes} scene${project.aiScenes === 1 ? '' : 's'} (+$${project.aiPrice})` : 'Off'}`, `Footage Link: ${project.footageLink || 'Not provided'}`, `Reference Link: ${project.referenceLink || 'Not provided'}`, `Creative Notes: ${project.notes}`, ''
+      `Project Name: ${project.projectName}`, `Format: ${project.format || 'To be discussed'}`, `Aimed Length: ${formatLength(project.aimedLength)}`, `Color Profile (LOG/Camera): ${project.colorProfile || 'Not provided'}`, `Preferred Music: ${project.music || 'To be discussed'}`, `AI Add-On: ${project.aiScenes ? `${project.aiScenes} scene${project.aiScenes === 1 ? '' : 's'} (+$${project.aiPrice})` : 'Off'}`, `Footage Link: ${project.footageLink || 'Not provided'}`, `Reference Link: ${project.referenceLink || 'Not provided'}`, `Creative Notes: ${project.notes}`, ''
     ])
   ].join('\n');
 

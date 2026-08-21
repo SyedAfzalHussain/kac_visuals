@@ -4,6 +4,7 @@ const search = document.querySelector('#projectSearch');
 const filter = document.querySelector('#statusFilter');
 const clientFilter = document.querySelector('#clientFilter');
 const paymentFilter = document.querySelector('#paymentFilter');
+const customToggle = document.querySelector('#customToggle');
 const adminMessage = document.querySelector('#adminMessage');
 const detailsDialog = document.querySelector('#projectDetailsDialog');
 const detailsContent = document.querySelector('#adminProjectDetails');
@@ -12,8 +13,13 @@ const editForm = document.querySelector('#projectEditForm');
 const editMessage = document.querySelector('#editMessage');
 const deleteDialog = document.querySelector('#deleteConfirmDialog');
 const deleteMessage = document.querySelector('#deleteMessage');
+const editorsDialog = document.querySelector('#editorsDialog');
+const editorsList = document.querySelector('#editorsList');
+const editorsMessage = document.querySelector('#editorsMessage');
+const printRoot = document.querySelector('#printRoot');
 const statuses = [['submitted','Submitted'],['reviewing','Reviewing'],['awaiting_files','Awaiting Files'],['in_progress','In Progress'],['in_review','In Review'],['completed','Completed'],['cancelled','Cancelled']];
 const paymentStatuses = [['unpaid','Unpaid'],['invoice_sent','Invoice Sent'],['partially_paid','Partially Paid'],['paid','Paid'],['refunded','Refunded']];
+const DAY_MS = 24 * 60 * 60 * 1000;
 const fieldLabels = {
   project_name: 'Project name', status: 'Project status', payment_status: 'Payment status',
   final_video_link: 'Final video link', creative_notes: 'Creative notes', admin_notes: 'Internal admin notes',
@@ -37,6 +43,7 @@ const editableFields = [
   { key: 'color_profile', label: 'Color profile', type: 'text' },
   { key: 'preferred_music', label: 'Preferred music', type: 'text' },
   { key: 'estimated_total', label: 'Estimated total ($)', type: 'number' },
+  { key: 'client_budget', label: 'Client proposed budget ($)', type: 'number' },
   { key: 'footage_link', label: 'Footage / project files', type: 'url', wide: true },
   { key: 'reference_link', label: 'Reference video', type: 'url', wide: true },
   { key: 'creative_notes', label: 'Creative notes', type: 'textarea', wide: true, required: true },
@@ -44,14 +51,26 @@ const editableFields = [
 ];
 let allProjects = [];
 let editsByProject = new Map();
+let people = [];
 let editingId = null;
 let deletingId = null;
+let detailProjectId = null;
+let customOnly = false;
 
 function escapeText(value = '') { const node = document.createElement('div'); node.textContent = value; return node.innerHTML; }
 function labelFor(options, value) { return options.find(([key]) => key === value)?.[1] || value || 'Not provided'; }
 function money(value) { return `$${Number(value || 0).toFixed(0)}`; }
 function dateTime(value) { return value ? new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'Not provided'; }
 function serial(project) { return project.serial_number ? `#${String(project.serial_number).padStart(3, '0')}` : '—'; }
+function isFresh(project) { return Date.now() - new Date(project.created_at).getTime() < DAY_MS; }
+function formatLength(seconds) {
+  const total = Number(seconds) || 0;
+  if (!total) return '';
+  if (total < 60) return `${total}s`;
+  const minutes = Math.floor(total / 60);
+  const rest = total % 60;
+  return rest ? `${minutes}m ${rest}s` : `${minutes} min`;
+}
 function safeHttpUrl(value) {
   if (!value) return '';
   try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
@@ -67,6 +86,10 @@ function historyValue(field, value) {
   if (field === 'payment_status') return labelFor(paymentStatuses, value);
   return value;
 }
+function servicesOf(project) {
+  return (project.services || []).map(service => `${service.name} × ${Number(service.quantity) || 0}`).join(', ') || project.service_name || '';
+}
+function editors() { return people.filter(person => person.role === 'editor'); }
 
 function renderHistory(edits) {
   if (!edits?.length) return '<p class="history-empty">No edits yet — this is the original submission.</p>';
@@ -90,6 +113,24 @@ function populateClientFilter() {
   clientFilter.value = previous;
 }
 
+function projectRow(project) {
+  const editCount = editsByProject.get(project.id)?.length || 0;
+  const fresh = isFresh(project);
+  const assigned = project.assigned_editor_id || '';
+  return `<tr${fresh ? ' class="fresh-row"' : ''}>
+    <td><strong class="serial-cell">${escapeText(serial(project))}</strong></td>
+    <td><strong>${project.service_name ? `Video ${String(project.project_number || 1).padStart(2, '0')} · ` : ''}${escapeText(project.project_name)}</strong><span>${escapeText(project.format || '')}${project.aimed_length ? ` · ${formatLength(project.aimed_length)}` : ''}${project.color_profile ? ` · ${escapeText(project.color_profile)}` : ''}</span>${fresh ? '<span class="new-badge">New</span>' : ''}${project.is_custom ? '<span class="custom-badge">Custom</span>' : ''}${editCount ? `<span class="edited-badge">Edited · ${editCount} change${editCount === 1 ? '' : 's'}</span>` : ''}<button class="admin-view-button" type="button" data-view-project="${project.id}">View all details</button></td>
+    <td><strong>${escapeText(project.client_name)}${project.client_id ? '' : ' · Guest'}</strong><span>${escapeText(project.client_email)}${project.company ? ` · ${escapeText(project.company)}` : ''}</span></td>
+    <td>${(project.services || []).map(service => `${escapeText(service.name)} × ${Number(service.quantity) || 0}`).join('<br>')}${project.ai_addon_scenes ? `<br><span>AI: ${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} (+${money(project.ai_addon_price)})</span>` : ''}</td>
+    <td>${money(project.estimated_total)}${project.client_budget ? `<br><span>Client budget ${money(project.client_budget)}</span>` : ''}</td>
+    <td>${new Date(project.created_at).toLocaleDateString()}</td>
+    <td><select data-project-status="${project.id}">${statuses.map(([value,label]) => `<option value="${value}"${project.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
+    <td><select data-payment-status="${project.id}">${paymentStatuses.map(([value,label]) => `<option value="${value}"${(project.payment_status || 'unpaid') === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
+    <td><select data-assign-editor="${project.id}"><option value="">Unassigned</option>${editors().map(person => `<option value="${person.id}"${assigned === person.id ? ' selected' : ''}>${escapeText(person.full_name || person.email)}</option>`).join('')}</select></td>
+    <td><div class="row-actions"><button class="admin-row-button" type="button" data-edit-project="${project.id}">Edit</button><button class="admin-row-button danger" type="button" data-delete-project="${project.id}">Delete</button></div></td>
+  </tr>`;
+}
+
 function render() {
   const query = search.value.toLowerCase().trim();
   const status = filter.value;
@@ -99,30 +140,162 @@ function render() {
     (!status || project.status === status)
     && (!payment || (project.payment_status || 'unpaid') === payment)
     && (!client || (project.client_email || project.client_name) === client)
+    && (!customOnly || project.is_custom)
     && (!query || [project.project_name,project.client_name,project.client_email,project.company,project.phone,project.submission_id,serial(project)].some(value => String(value || '').toLowerCase().includes(query))));
-  tbody.innerHTML = projects.length ? projects.map(project => {
-    const editCount = editsByProject.get(project.id)?.length || 0;
-    return `<tr>
-    <td><strong class="serial-cell">${escapeText(serial(project))}</strong></td>
-    <td><strong>${project.service_name ? `Video ${String(project.project_number || 1).padStart(2, '0')} · ` : ''}${escapeText(project.project_name)}</strong><span>${escapeText(project.format || '')}${project.aimed_length ? ` · ${project.aimed_length}s` : ''}${project.color_profile ? ` · ${escapeText(project.color_profile)}` : ''}</span>${editCount ? `<span class="edited-badge">Edited · ${editCount} change${editCount === 1 ? '' : 's'}</span>` : ''}<button class="admin-view-button" type="button" data-view-project="${project.id}">View all details</button></td>
-    <td><strong>${escapeText(project.client_name)}${project.client_id ? '' : ' · Guest'}</strong><span>${escapeText(project.client_email)}${project.company ? ` · ${escapeText(project.company)}` : ''}</span></td>
-    <td>${(project.services || []).map(service => `${escapeText(service.name)} × ${service.quantity}`).join('<br>')}${project.ai_addon_scenes ? `<br><span>AI: ${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} (+${money(project.ai_addon_price)})</span>` : ''}</td>
-    <td>${money(project.estimated_total)}</td><td>${new Date(project.created_at).toLocaleDateString()}</td>
-    <td><select data-project-status="${project.id}">${statuses.map(([value,label]) => `<option value="${value}"${project.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
-    <td><select data-payment-status="${project.id}">${paymentStatuses.map(([value,label]) => `<option value="${value}"${(project.payment_status || 'unpaid') === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
-    <td><div class="row-actions"><button class="admin-row-button" type="button" data-edit-project="${project.id}">Edit</button><button class="admin-row-button danger" type="button" data-delete-project="${project.id}">Delete</button></div></td>
-  </tr>`; }).join('') : '<tr><td colspan="9">No projects found.</td></tr>';
+
+  if (!projects.length) { tbody.innerHTML = '<tr><td colspan="10">No projects found.</td></tr>'; return; }
+
+  const fresh = projects.filter(isFresh);
+  const earlier = projects.filter(project => !isFresh(project));
+  const divider = (label, count, cls) => `<tr class="group-row ${cls}"><td colspan="10">${label}${count ? ` · ${count}` : ''}</td></tr>`;
+
+  tbody.innerHTML = fresh.length
+    ? divider('◆ Last 24 Hours', `${fresh.length} new`, 'fresh-group') + fresh.map(projectRow).join('')
+      + (earlier.length ? divider('Earlier', '', 'older-group') + earlier.map(projectRow).join('') : '')
+    : projects.map(projectRow).join('');
 }
 
 function openProjectDetails(project) {
-  const services = (project.services || []).map(service => `${service.name} × ${service.quantity}`).join(', ') || project.service_name || 'Not provided';
+  detailProjectId = project.id;
+  const services = servicesOf(project) || 'Not provided';
   const phoneHref = String(project.phone || '').replace(/[^0-9+]/g, '');
-  detailsContent.innerHTML = `<header class="portal-detail-heading"><p class="kicker">Complete Saved Request · ${escapeText(serial(project))}</p><h2 id="projectDetailsTitle">${escapeText(project.project_name)}</h2><div class="project-card-badges"><span class="status-badge">${escapeText(labelFor(statuses, project.status))}</span><span class="payment-badge" data-payment="${project.payment_status || 'unpaid'}">Payment · ${escapeText(labelFor(paymentStatuses, project.payment_status || 'unpaid'))}</span></div></header>
+  detailsContent.innerHTML = `<header class="portal-detail-heading"><p class="kicker">Complete Saved Request · ${escapeText(serial(project))}</p><h2 id="projectDetailsTitle">${escapeText(project.project_name)}</h2><div class="project-card-badges"><span class="status-badge">${escapeText(labelFor(statuses, project.status))}</span><span class="payment-badge" data-payment="${project.payment_status || 'unpaid'}">Payment · ${escapeText(labelFor(paymentStatuses, project.payment_status || 'unpaid'))}</span>${project.is_custom ? '<span class="custom-badge">Custom Project</span>' : ''}</div></header>
     <section class="portal-detail-section"><h3>Client Contact</h3><div class="portal-detail-grid">${detail('Full name', project.client_name)}<div class="portal-detail-item"><small>Email</small><a href="mailto:${encodeURIComponent(project.client_email || '')}">${escapeText(project.client_email)}</a></div><div class="portal-detail-item"><small>Phone / WhatsApp</small>${phoneHref ? `<a href="tel:${phoneHref}">${escapeText(project.phone)}</a>` : '<strong>Not provided</strong>'}</div>${detail('Company', project.company)}${detail('Account type', project.client_id ? 'Registered client' : 'Guest')}</div></section>
-    <section class="portal-detail-section"><h3>Project Brief</h3><div class="portal-detail-grid">${detail('Serial number', serial(project))}${detail('Service', services)}${detail('Video number', String(project.project_number || 1).padStart(2, '0'))}${detail('Format', project.format)}${detail('Aimed length', project.aimed_length ? `${project.aimed_length}s` : '')}${detail('Color profile', project.color_profile)}${detail('Preferred music', project.preferred_music)}${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off')}${linkDetail('Final video link', project.final_video_link)}${linkDetail('Footage / project files', project.footage_link)}${linkDetail('Reference video', project.reference_link)}${detail('Creative notes', project.creative_notes, true)}${detail('Internal admin notes', project.admin_notes, true)}</div></section>
-    <section class="portal-detail-section"><h3>Pricing &amp; Record</h3><div class="portal-detail-grid">${detail('Base price', money(project.unit_price || Number(project.estimated_total) - Number(project.ai_addon_price || 0)))}${detail('AI add-on price', money(project.ai_addon_price))}${detail('Estimated total', money(project.estimated_total))}${detail('Payment status', labelFor(paymentStatuses, project.payment_status || 'unpaid'))}${detail('Project status', labelFor(statuses, project.status))}${detail('Submitted', dateTime(project.created_at))}${detail('Last updated', dateTime(project.updated_at))}${detail('Submission ID', project.submission_id, true)}${detail('Project ID', project.id, true)}</div></section>
+    <section class="portal-detail-section"><h3>Project Brief</h3><div class="portal-detail-grid">${detail('Serial number', serial(project))}${detail('Service', services)}${detail('Video number', String(project.project_number || 1).padStart(2, '0'))}${detail('Format', project.format)}${detail('Aimed length', formatLength(project.aimed_length))}${detail('Color profile', project.color_profile)}${detail('Preferred music', project.preferred_music)}${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off')}${detail('Assigned editor', project.assigned_editor_name)}${linkDetail('Final video link', project.final_video_link)}${linkDetail('Footage / project files', project.footage_link)}${linkDetail('Reference video', project.reference_link)}${detail('Creative notes', project.creative_notes, true)}${detail('Internal admin notes', project.admin_notes, true)}</div></section>
+    <section class="portal-detail-section"><h3>Pricing &amp; Record</h3><div class="portal-detail-grid">${detail('Base price', money(project.unit_price || Number(project.estimated_total) - Number(project.ai_addon_price || 0)))}${detail('AI add-on price', money(project.ai_addon_price))}${detail('Estimated total', money(project.estimated_total))}${project.client_budget ? detail('Client proposed budget', money(project.client_budget)) : ''}${detail('Payment status', labelFor(paymentStatuses, project.payment_status || 'unpaid'))}${detail('Project status', labelFor(statuses, project.status))}${detail('Submitted', dateTime(project.created_at))}${detail('Last updated', dateTime(project.updated_at))}${detail('Submission ID', project.submission_id, true)}${detail('Project ID', project.id, true)}</div></section>
     <section class="portal-detail-section"><h3>Edit History</h3><div class="history-list">${renderHistory(editsByProject.get(project.id))}</div></section>`;
   detailsDialog.showModal();
+}
+
+// --- PDF: build a branded, print-only Project Brief. AI add-on price is omitted. ---
+function printRow(label, value) {
+  return value ? `<tr><th>${escapeText(label)}</th><td>${escapeText(value)}</td></tr>` : '';
+}
+
+function exportProjectPdf(project) {
+  const services = servicesOf(project) || 'Not provided';
+  printRoot.innerHTML = `<article class="print-doc">
+    <header class="print-head">
+      <img src="/assets/karrar/logo.png" alt="">
+      <div class="print-company">
+        <strong>Karrar Enterprises LLC</strong>
+        <span>Premium real estate &amp; social media video editing</span>
+        <span>5830 E 2nd St, Ste 7000, Casper, WY 82609, United States</span>
+        <span>karrarvisuals@gmail.com · +1 402 808 7996</span>
+      </div>
+    </header>
+    <div class="print-title">
+      <span class="print-kicker">Project Brief</span>
+      <h1>${escapeText(serial(project))} · ${escapeText(project.project_name)}</h1>
+      <span class="print-status">${escapeText(labelFor(statuses, project.status))} · Submitted ${escapeText(dateTime(project.created_at))}</span>
+    </div>
+    <section class="print-section">
+      <h2>Client</h2>
+      <table class="print-table">
+        ${printRow('Full name', project.client_name)}
+        ${printRow('Email', project.client_email)}
+        ${printRow('Phone / WhatsApp', project.phone)}
+        ${printRow('Company', project.company)}
+      </table>
+    </section>
+    <section class="print-section">
+      <h2>Project Brief</h2>
+      <table class="print-table">
+        ${printRow('Serial number', serial(project))}
+        ${printRow('Service', services)}
+        ${printRow('Video number', String(project.project_number || 1).padStart(2, '0'))}
+        ${printRow('Format', project.format)}
+        ${printRow('Aimed length', formatLength(project.aimed_length))}
+        ${printRow('Color profile', project.color_profile)}
+        ${printRow('Preferred music', project.preferred_music)}
+        ${printRow('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'}` : 'Off')}
+        ${printRow('Assigned editor', project.assigned_editor_name)}
+        ${printRow('Footage / project files', project.footage_link)}
+        ${printRow('Reference video', project.reference_link)}
+        ${printRow('Final video link', project.final_video_link)}
+      </table>
+    </section>
+    ${project.creative_notes ? `<section class="print-section"><h2>Creative Notes</h2><p class="print-notes">${escapeText(project.creative_notes)}</p></section>` : ''}
+    <footer class="print-foot">
+      <span>Generated ${escapeText(new Date().toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' }))}</span>
+      <span>Karrar Enterprises LLC · karrarenterprisesllc.com</span>
+    </footer>
+  </article>`;
+  document.body.classList.add('printing');
+  const cleanup = () => { document.body.classList.remove('printing'); printRoot.innerHTML = ''; };
+  addEventListener('afterprint', cleanup, { once: true });
+  setTimeout(() => print(), 60);
+}
+
+// --- Excel: every stored field, one row per project. ---
+function exportExcelWorkbook() {
+  if (typeof XLSX === 'undefined') {
+    adminMessage.textContent = 'The spreadsheet library did not load. Check your connection and retry.';
+    adminMessage.className = 'portal-message error';
+    return;
+  }
+  const rows = allProjects.map(project => ({
+    'Serial': project.serial_number || '',
+    'Project Name': project.project_name || '',
+    'Custom Project': project.is_custom ? 'Yes' : 'No',
+    'Client Name': project.client_name || '',
+    'Client Email': project.client_email || '',
+    'Phone': project.phone || '',
+    'Company': project.company || '',
+    'Account Type': project.client_id ? 'Registered' : 'Guest',
+    'Services': servicesOf(project),
+    'Video Number': project.project_number || '',
+    'Format': project.format || '',
+    'Aimed Length': formatLength(project.aimed_length),
+    'Color Profile': project.color_profile || '',
+    'Preferred Music': project.preferred_music || '',
+    'AI Add-On Scenes': project.ai_addon_scenes || 0,
+    'AI Add-On Price': Number(project.ai_addon_price || 0),
+    'Base Price': Number(project.unit_price || 0),
+    'Estimated Total': Number(project.estimated_total || 0),
+    'Client Budget': project.client_budget === null || project.client_budget === undefined ? '' : Number(project.client_budget),
+    'Status': labelFor(statuses, project.status),
+    'Payment Status': labelFor(paymentStatuses, project.payment_status || 'unpaid'),
+    'Assigned Editor': project.assigned_editor_name || '',
+    'Final Video Link': project.final_video_link || '',
+    'Footage Link': project.footage_link || '',
+    'Reference Link': project.reference_link || '',
+    'Creative Notes': project.creative_notes || '',
+    'Admin Notes': project.admin_notes || '',
+    'Edits Recorded': editsByProject.get(project.id)?.length || 0,
+    'Submitted': project.created_at ? new Date(project.created_at).toLocaleString() : '',
+    'Last Updated': project.updated_at ? new Date(project.updated_at).toLocaleString() : '',
+    'Submission ID': project.submission_id || '',
+    'Project ID': project.id
+  }));
+
+  const sheet = XLSX.utils.json_to_sheet(rows);
+  sheet['!cols'] = Object.keys(rows[0] || { a: '' }).map(key => ({
+    wch: Math.min(46, Math.max(12, key.length + 2, ...rows.map(row => String(row[key] ?? '').length).slice(0, 200)))
+  }));
+
+  const historyRows = [];
+  editsByProject.forEach((edits, projectId) => {
+    const project = allProjects.find(item => item.id === projectId);
+    edits.forEach(edit => historyRows.push({
+      'Serial': project?.serial_number || '',
+      'Project Name': project?.project_name || '',
+      'Field': fieldLabels[edit.field] || edit.field,
+      'Before': edit.old_value ?? '',
+      'After': edit.new_value ?? '',
+      'Edited By': edit.edited_by_name || '',
+      'Role': edit.edited_by_role || '',
+      'When': edit.created_at ? new Date(edit.created_at).toLocaleString() : ''
+    }));
+  });
+
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, sheet, 'Projects');
+  if (historyRows.length) XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(historyRows), 'Edit History');
+  const stamp = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(book, `karrar-projects-${stamp}.xlsx`);
+  adminMessage.textContent = `Exported ${rows.length} project${rows.length === 1 ? '' : 's'} to Excel.`;
+  adminMessage.className = 'portal-message success';
 }
 
 function openEditor(project) {
@@ -142,10 +315,26 @@ function openEditor(project) {
   editDialog.showModal();
 }
 
+function renderPeople() {
+  if (!people.length) { editorsList.innerHTML = '<p class="history-empty">No registered accounts yet.</p>'; return; }
+  editorsList.innerHTML = people.map(person => `<div class="editor-row">
+    <div><strong>${escapeText(person.full_name || 'Unnamed')}</strong><span>${escapeText(person.email)}</span></div>
+    <span class="role-badge" data-role="${person.role}">${escapeText(person.role)}</span>
+    <div class="row-actions">
+      ${person.role === 'editor'
+        ? `<button class="admin-row-button" type="button" data-set-role="client" data-user="${person.id}">Remove editor</button>`
+        : person.role === 'admin'
+          ? '<span class="locked-note">Administrator</span>'
+          : `<button class="admin-row-button" type="button" data-set-role="editor" data-user="${person.id}">Make editor</button>`}
+    </div>
+  </div>`).join('');
+}
+
 async function loadProjects() {
-  const [projectsResult, editsResult] = await Promise.all([
+  const [projectsResult, editsResult, peopleResult] = await Promise.all([
     adminPortal.client.from('projects').select('*').order('serial_number', { ascending: false }),
-    adminPortal.client.from('project_edits').select('*').order('created_at', { ascending: false })
+    adminPortal.client.from('project_edits').select('*').order('created_at', { ascending: false }),
+    adminPortal.client.from('profiles').select('id, email, full_name, role').order('full_name')
   ]);
   if (projectsResult.error) {
     adminMessage.textContent = projectsResult.error.message;
@@ -153,6 +342,7 @@ async function loadProjects() {
     return;
   }
   allProjects = projectsResult.data || [];
+  people = peopleResult.data || [];
   editsByProject = new Map();
   (editsResult.data || []).forEach(edit => {
     if (!editsByProject.has(edit.project_id)) editsByProject.set(edit.project_id, []);
@@ -172,6 +362,43 @@ search.addEventListener('input', render);
 filter.addEventListener('change', render);
 clientFilter.addEventListener('change', render);
 paymentFilter.addEventListener('change', render);
+
+customToggle.addEventListener('click', () => {
+  customOnly = !customOnly;
+  customToggle.setAttribute('aria-pressed', String(customOnly));
+  customToggle.classList.toggle('active', customOnly);
+  customToggle.textContent = customOnly ? '★ Showing Custom Only' : '★ Custom Projects';
+  render();
+});
+
+document.querySelector('#exportExcel').addEventListener('click', exportExcelWorkbook);
+document.querySelector('#exportProjectPdf').addEventListener('click', () => {
+  const project = allProjects.find(item => item.id === detailProjectId);
+  if (project) exportProjectPdf(project);
+});
+
+document.querySelector('#manageEditors').addEventListener('click', () => {
+  editorsMessage.textContent = '';
+  renderPeople();
+  editorsDialog.showModal();
+});
+
+editorsList.addEventListener('click', async event => {
+  const button = event.target.closest('[data-set-role]');
+  if (!button) return;
+  editorsMessage.textContent = 'Updating role...';
+  editorsMessage.className = 'portal-message';
+  const { error } = await adminPortal.client.rpc('set_user_role', { p_user: button.dataset.user, p_role: button.dataset.setRole });
+  if (error) {
+    editorsMessage.textContent = error.message;
+    editorsMessage.className = 'portal-message error';
+    return;
+  }
+  editorsMessage.textContent = 'Role updated.';
+  editorsMessage.className = 'portal-message success';
+  await loadProjects();
+  renderPeople();
+});
 
 tbody.addEventListener('click', event => {
   const viewButton = event.target.closest('[data-view-project]');
@@ -196,13 +423,25 @@ tbody.addEventListener('click', event => {
 tbody.addEventListener('change', async event => {
   const projectSelect = event.target.closest('[data-project-status]');
   const paymentSelect = event.target.closest('[data-payment-status]');
-  if (!projectSelect && !paymentSelect) return;
-  const select = projectSelect || paymentSelect;
-  const id = projectSelect ? select.dataset.projectStatus : select.dataset.paymentStatus;
-  const column = projectSelect ? 'status' : 'payment_status';
-  const label = projectSelect ? 'Project status' : 'Payment status';
+  const editorSelect = event.target.closest('[data-assign-editor]');
+  if (!projectSelect && !paymentSelect && !editorSelect) return;
+
+  let id, payload, label;
+  if (editorSelect) {
+    id = editorSelect.dataset.assignEditor;
+    const person = people.find(item => item.id === editorSelect.value);
+    payload = { assigned_editor_id: person?.id || null, assigned_editor_name: person ? (person.full_name || person.email) : null };
+    label = 'Assigned editor';
+  } else {
+    const select = projectSelect || paymentSelect;
+    id = projectSelect ? select.dataset.projectStatus : select.dataset.paymentStatus;
+    payload = { [projectSelect ? 'status' : 'payment_status']: select.value };
+    label = projectSelect ? 'Project status' : 'Payment status';
+  }
+
   adminMessage.textContent = `Updating ${label.toLowerCase()}...`;
-  const { error } = await adminPortal.client.from('projects').update({ [column]: select.value }).eq('id', id);
+  adminMessage.className = 'portal-message';
+  const { error } = await adminPortal.client.from('projects').update(payload).eq('id', id);
   adminMessage.textContent = error ? error.message : `${label} updated.`;
   adminMessage.className = `portal-message ${error ? 'error' : 'success'}`;
   if (!error) await loadProjects();
@@ -259,4 +498,5 @@ document.querySelector('[data-close-project]').addEventListener('click', () => d
 detailsDialog.addEventListener('click', event => { if (event.target === detailsDialog) detailsDialog.close(); });
 editDialog.querySelectorAll('[data-close-edit]').forEach(button => button.addEventListener('click', () => { editDialog.close(); editingId = null; }));
 deleteDialog.querySelectorAll('[data-close-delete]').forEach(button => button.addEventListener('click', () => { deleteDialog.close(); deletingId = null; }));
+editorsDialog.querySelectorAll('[data-close-editors]').forEach(button => button.addEventListener('click', () => editorsDialog.close()));
 document.querySelector('[data-signout]').addEventListener('click', () => adminPortal.signOut());

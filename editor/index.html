@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Assignments · Karrar Enterprises</title>
+  <meta name="description" content="Editor workspace for assigned Karrar Enterprises projects.">
+  <link rel="icon" type="image/png" href="/assets/karrar/favicon-black.png">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/media-updates.css">
+  <link rel="stylesheet" href="/portal.css">
+</head>
+<body class="portal-page">
+  <header class="portal-header"><nav class="portal-nav shell"><a class="portal-brand" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Editor</span></a><div class="portal-actions"><a class="hide-mobile" href="/">Website</a><button class="portal-link-button" type="button" data-signout>Sign Out</button></div></nav></header>
+  <main class="portal-main"><div class="shell">
+    <div class="portal-heading"><p class="kicker">Editor Workspace</p><h1>My Assignments</h1><p>Projects assigned to you. Add the final video link when your edit is delivered.</p></div>
+    <div class="portal-grid">
+      <aside class="portal-card profile-card" id="editorCard"><div class="profile-avatar">E</div><h2>Loading...</h2><p></p><span class="role-badge">Editor</span></aside>
+      <section><div class="projects-list" id="assignmentsList"><div class="portal-empty">Loading your assignments...</div></div></section>
+    </div>
+  </div></main>
+
+  <dialog class="project-dialog" id="linkDialog" aria-labelledby="linkTitle">
+    <button class="project-dialog-close" type="button" data-close-link aria-label="Close">×</button>
+    <header class="portal-detail-heading"><p class="kicker" style="color: #8b7cff;">Deliver</p><h2 id="linkTitle">Final Video Link</h2></header>
+    <p class="confirm-copy">Paste the link to the finished video. This is the only field you can change — everything else is managed by Karrar Enterprises.</p>
+    <form id="linkForm" class="admin-edit-form">
+      <label class="portal-field wide"><span>Final video link</span><input type="url" id="finalLinkInput" placeholder="https://drive.google.com/..."></label>
+    </form>
+    <p class="portal-message" id="linkMessage"></p>
+    <div class="admin-dialog-actions"><button class="button button-outline button-small" type="button" data-close-link style="color: #8b7cff;">Cancel</button><button class="button button-gold button-small" type="button" id="saveFinalLink">Save Link</button></div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/portal-config.js"></script><script src="/portal.js"></script><script src="/editor.js"></script><script defer src="/_vercel/insights/script.js"></script>
+  <script src="/loader.js"></script>
+</body>
+</html>
