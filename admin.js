@@ -420,7 +420,7 @@ customToggle.addEventListener('click', () => {
   customOnly = !customOnly;
   customToggle.setAttribute('aria-pressed', String(customOnly));
   customToggle.classList.toggle('active', customOnly);
-  customToggle.textContent = customOnly ? '★ Showing All Projects' : '★ Custom Projects';
+  customToggle.textContent = customOnly ? '★ Show All Projects' : '★ Custom Projects';
   customToggle.style.color = '#8b7cff';
   render();
 });

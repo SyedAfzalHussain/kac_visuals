@@ -10,12 +10,23 @@
   <link rel="stylesheet" href="/media-updates.css">
   <link rel="stylesheet" href="/order.css">
   <link rel="stylesheet" href="/video-viewer.css">
-</head>
+
+    <link rel="canonical" href="https://www.karrarenterprisesllc.com/order">
+    <meta name="robots" content="noindex,nofollow">
+  
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="preload" href="/assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/oswald.woff2" as="font" type="font/woff2" crossorigin>
+  </head>
 <body class="order-page">
   <header class="order-header">
     <nav class="order-nav shell">
-      <a class="order-brand" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Enterprises</span></a>
-      <div class="order-nav-actions"><a href="/">← Back to Site</a><a id="portalLink" href="/login/?next=/order/" hidden>Client Login</a><a class="button button-gold button-small" href="/book-a-call/">Book A Call</a></div>
+      <a class="order-brand" href="/"><img loading="lazy" decoding="async" width="1024" height="1536" src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Enterprises</span></a>
+      <div class="order-nav-actions"><a href="/">← Back to Site</a><a id="portalLink" href="/login/?next=/order/" hidden>Client Login</a><a class="button button-gold button-small" href="/book-a-call">Book A Call</a></div>
     </nav>
   </header>
 
@@ -31,7 +42,7 @@
           <section class="order-step active" data-step="1">
             <div class="order-heading"><p class="kicker">Step 01</p><h1>Choose Your Edit</h1><p>Select one or more services and adjust the quantity.</p></div>
             <div class="order-products" id="orderProducts"></div>
-            <p class="custom-quote">Need something custom? <a href="/custom/">Request a custom quote</a></p>
+            <p class="custom-quote">Need something custom? <a href="/custom">Request a custom quote</a></p>
           </section>
 
           <section class="order-step" data-step="2">
@@ -75,7 +86,7 @@
     <div class="order-success-backdrop" data-close-success></div>
     <section class="order-success-card" role="dialog" aria-modal="true" aria-labelledby="orderSuccessTitle">
       <button class="order-success-close" type="button" aria-label="Close" data-close-success>×</button>
-      <img src="/assets/karrar/logo.png" alt="Karrar Enterprises">
+      <img loading="lazy" decoding="async" width="1024" height="1536" src="/assets/karrar/logo.png" alt="Karrar Enterprises">
       <p class="kicker">Request Received</p>
       <h2 id="orderSuccessTitle">Project Submitted Successfully!</h2>
       <p>Thank you for submitting your project. Your request has been received successfully.</p>

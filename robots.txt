@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /editor/
+Disallow: /login/
+Disallow: /order/
+Disallow: /custom/
+Disallow: /project-submitted/
+
+Sitemap: https://www.karrarenterprisesllc.com/sitemap.xml

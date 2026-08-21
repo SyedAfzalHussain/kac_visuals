@@ -9,17 +9,28 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/media-updates.css">
   <link rel="stylesheet" href="/portal.css">
-</head>
+
+    <link rel="canonical" href="https://www.karrarenterprisesllc.com/admin">
+    <meta name="robots" content="noindex,nofollow">
+  
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="preload" href="/assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/oswald.woff2" as="font" type="font/woff2" crossorigin>
+  </head>
 <body class="portal-page">
   <div class="auth-gate" id="authGate" role="status" aria-live="polite">Checking access</div>
-  <header class="portal-header"><nav class="portal-nav shell"><a class="portal-brand" href="/"><img src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Admin</span></a><div class="portal-actions"><a href="/admin/deleted/">Deleted Projects</a><a href="/profile/">My Profile</a><button class="portal-link-button" type="button" data-signout>Sign Out</button></div></nav></header>
+  <header class="portal-header"><nav class="portal-nav shell"><a class="portal-brand" href="/"><img loading="eager" fetchpriority="high" width="1024" height="1536" src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Admin</span></a><div class="portal-actions"><a href="/admin/deleted">Deleted Projects</a><a href="/profile">My Profile</a><button class="portal-link-button" type="button" data-signout>Sign Out</button></div></nav></header>
   <main class="portal-main"><div class="shell">
     <div class="portal-heading"><p class="kicker">Administration</p><h1>Client Projects</h1><p>Review every client request and update its progress and payment.</p></div>
     <div class="admin-actionbar">
       <button class="button button-gold button-small" type="button" id="exportExcel">⤓ Export All To Excel</button>
       <button class="button button-outline button-small" type="button" id="customToggle" aria-pressed="false" style="color: #8b7cff;">★ Custom Projects</button>
       <button class="button button-outline button-small" type="button" id="manageEditors" style="color: #8b7cff; display: none;">Manage Editors</button>
-      <a class="button button-outline button-small" href="/admin/deleted/">Deleted Projects</a>
+      <a class="button button-outline button-small" href="/admin/deleted">Deleted Projects</a>
     </div>
     <div class="admin-toolbar"><input id="projectSearch" type="search" placeholder="Search client, email, company, or project"><select id="clientFilter"><option value="">All clients</option></select><select id="statusFilter"><option value="">All statuses</option><option value="submitted">Submitted</option><option value="reviewing">Reviewing</option><option value="awaiting_files">Awaiting Files</option><option value="in_progress">In Progress</option><option value="in_review">In Review</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><select id="paymentFilter"><option value="">All payments</option><option value="unpaid">Unpaid</option><option value="invoice_sent">Invoice Sent</option><option value="partially_paid">Partially Paid</option><option value="paid">Paid</option><option value="refunded">Refunded</option></select></div>
     <p class="portal-message" id="adminMessage"></p>
@@ -54,7 +65,7 @@
 
   <dialog class="project-dialog confirm-dialog" id="deleteConfirmDialog" aria-labelledby="deleteConfirmTitle">
     <header class="portal-detail-heading"><p class="kicker">Confirm Deletion</p><h2 id="deleteConfirmTitle">Are you sure?</h2></header>
-    <p class="confirm-copy">You are about to delete <strong id="deleteProjectName"></strong>. A full backup is kept on the <a href="/admin/deleted/">Deleted Projects</a> page and can be restored later.</p>
+    <p class="confirm-copy">You are about to delete <strong id="deleteProjectName"></strong>. A full backup is kept on the <a href="/admin/deleted">Deleted Projects</a> page and can be restored later.</p>
     <p class="portal-message" id="deleteMessage"></p>
     <div class="admin-dialog-actions"><button class="button button-outline button-small" type="button" data-close-delete style="color: #8b7cff;">Cancel</button><button class="button button-small danger-button" type="button" id="confirmDelete">Yes, Delete Project</button></div>
   </dialog>

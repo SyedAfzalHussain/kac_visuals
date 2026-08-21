@@ -1,12 +1,12 @@
 const packages = [
-  ['Signature  ', '$260', ['Signature Style', 'Premium Finish', 'Portfolio Sample'], 'portrait1', 'assets/karrar/signature.jpg', 'portrait'],
-  ['listing', '$230', ['Property Storytelling', 'Cinematic Pacing', 'Social Ready'], 'portrait3', 'assets/karrar/signature.jpg', 'portrait'],
-  ['Standard Branding  ', '$120', ['Clean Graphics', 'Premium Finish', 'Social Ready'], 'portrait4', 'assets/karrar/branding.jpg', 'portrait'],
-  ['Advanced Branding  ', '$170', ['Brand Storytelling', 'Clean Graphics', 'Social Ready'], 'portrait2', 'assets/karrar/branding.jpg', 'portrait'],
-  ['Commercial ', '$230', ['Luxury Visuals', 'Property Focused', 'Premium Sound'], 'portrait5', 'assets/karrar/signature.jpg', 'portrait'],
-  ['Yacht ', '$260', ['Luxury Visuals', 'Cinematic Pacing', 'Premium Sound Design'], 'portrait7', 'assets/karrar/yacht.jpg', 'portrait'],
+  ['Signature Edit', '$260', ['Signature Style', 'Premium Finish', 'Portfolio Sample'], 'portrait1', 'assets/karrar/signature.jpg', 'portrait'],
+  ['Listing Edit', '$230', ['Property Storytelling', 'Cinematic Pacing', 'Social Ready'], 'portrait3', 'assets/karrar/signature.jpg', 'portrait'],
+  ['Standard Branding', '$120', ['Clean Graphics', 'Premium Finish', 'Social Ready'], 'portrait4', 'assets/karrar/branding.jpg', 'portrait'],
+  ['Advanced Branding', '$170', ['Brand Storytelling', 'Clean Graphics', 'Social Ready'], 'portrait2', 'assets/karrar/branding.jpg', 'portrait'],
+  ['Commercial Edit', '$230', ['Luxury Visuals', 'Property Focused', 'Premium Sound'], 'portrait5', 'assets/karrar/signature.jpg', 'portrait'],
+  ['Yacht Edit', '$260', ['Luxury Visuals', 'Cinematic Pacing', 'Premium Sound Design'], 'portrait7', 'assets/karrar/yacht.jpg', 'portrait'],
   ['Simple Edit', '$120', ['Landscape Delivery', 'Cinematic Finish', 'Premium Sound'], 'landscape1', 'assets/karrar/signature.jpg', 'landscape'],
-  ['Cenametic Edit', '$230', ['Wide Format', 'Property Storytelling', 'Premium Finish'], 'landscape2', 'assets/karrar/signature.jpg', 'landscape'],
+  ['Cinematic Edit', '$230', ['Wide Format', 'Property Storytelling', 'Premium Finish'], 'landscape2', 'assets/karrar/signature.jpg', 'landscape'],
 ];
 function autoplayVideo(video, url) {
   if (url) {
@@ -47,8 +47,9 @@ landscapeGrid.innerHTML = renderPackages(packages.filter(item => item[5] === 'la
 document.querySelectorAll('.package-grid video, .landscape-grid video').forEach(video => autoplayVideo(video));
 
 const logos = ['sharkey.png','Studio-910.png','Studio-Sunday-768x573.png','oppB.png','clutch.png','movemed.png'];
+const LOGO_NAMES = {"sharkey.png": "Sharkey Media Group", "Studio-910.png": "Studio 910", "Studio-Sunday-768x573.png": "Studio Sunday", "oppB.png": "JT Visuals", "clutch.png": "Clutch", "movemed.png": "MOVE Media", "keb.png": "Cohen and Co"};
 const logoTrack = document.querySelector('#logoTrack');
-logoTrack.innerHTML = [...logos, ...logos].map(name => `<img src="assets/logos/trimmed/${name}" alt="Client logo" />`).join('');
+logoTrack.innerHTML = [...logos, ...logos].map(name => `<img src="assets/logos/trimmed/${name}" alt="${LOGO_NAMES[name] || 'Client'} logo" loading="lazy" decoding="async" />`).join('');
 
 const testimonials = [
   ['Cinematic property edits designed to present listings with polish, pacing, and premium visual impact.', 'Real Estate Media', 'Karrar Enterprises'],
