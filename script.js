@@ -48,7 +48,7 @@ document.querySelectorAll('.package-grid video, .landscape-grid video').forEach(
 
 const logos = ['sharkey.png','Studio-910.png','Studio-Sunday-768x573.png','oppB.png','clutch.png','movemed.png'];
 const logoTrack = document.querySelector('#logoTrack');
-logoTrack.innerHTML = [...logos, ...logos].map(name => `<img src="assets/logos/${name}" alt="Client logo" />`).join('');
+logoTrack.innerHTML = [...logos, ...logos].map(name => `<img src="assets/logos/trimmed/${name}" alt="Client logo" />`).join('');
 
 const testimonials = [
   ['Cinematic property edits designed to present listings with polish, pacing, and premium visual impact.', 'Real Estate Media', 'Karrar Enterprises'],

@@ -47,5 +47,10 @@
     location.replace('/login/');
   }
 
-  window.KarrarPortal = { config, configured, client, safeNext, user, profile, requireUser, signOut };
+  // Pages start behind an opaque overlay so a privileged shell never paints
+  // for someone who turns out not to be allowed to see it. Each page calls
+  // this only once it is satisfied with the role it got back.
+  function releaseGate() { document.querySelector('#authGate')?.remove(); }
+
+  window.KarrarPortal = { config, configured, client, safeNext, user, profile, requireUser, signOut, releaseGate };
 })();

@@ -11,7 +11,7 @@ const paymentLabels = { unpaid: 'Unpaid', invoice_sent: 'Invoice Sent', partiall
 const editableStatuses = ['submitted', 'reviewing', 'awaiting_files'];
 const fieldLabels = {
   project_name: 'Project name', status: 'Project status', payment_status: 'Payment status',
-  final_video_link: 'Final video link', creative_notes: 'Creative notes', admin_notes: 'Internal admin notes',
+  final_video_link: 'Final video link', creative_notes: 'Creative notes and Script', admin_notes: 'Internal admin notes',
   format: 'Format', preferred_music: 'Preferred music', footage_link: 'Footage / project files',
   reference_link: 'Reference video', aimed_length: 'Aimed length', color_profile: 'Color profile',
   estimated_total: 'Estimated total', unit_price: 'Base price', phone: 'Phone / WhatsApp',
@@ -28,7 +28,7 @@ const clientEditableFields = [
   { key: 'preferred_music', label: 'Preferred music', type: 'text' },
   { key: 'footage_link', label: 'Footage / project files', type: 'url', wide: true },
   { key: 'reference_link', label: 'Reference video', type: 'url', wide: true },
-  { key: 'creative_notes', label: 'Creative notes', type: 'textarea', wide: true, required: true }
+  { key: 'creative_notes', label: 'Creative notes and Script', type: 'textarea', wide: true, required: true }
 ];
 let myProjects = [];
 let editsByProject = new Map();
@@ -79,7 +79,7 @@ function renderProjects(projects) {
       <div class="project-services">${(project.services || []).map(service => `<span>${escapeText(service.name)} × ${Number(service.quantity) || 0}</span>`).join('')}</div>
       <div class="project-meta"><div><small>Format</small><strong>${escapeText(project.format || 'To be discussed')}</strong></div><div><small>Aimed Length</small><strong>${project.aimed_length ? `${project.aimed_length}s` : 'Not provided'}</strong></div><div><small>Color Profile</small><strong>${escapeText(project.color_profile || 'Not provided')}</strong></div><div><small>Music</small><strong>${escapeText(project.preferred_music || 'To be discussed')}</strong></div><div><small>AI Add-On</small><strong>${project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off'}</strong></div><div><small>Estimate</small><strong>${money(project.estimated_total)}</strong></div></div>
       <div class="project-card-actions">${editable ? `<button class="button button-outline button-small" type="button" data-edit-project="${project.id}" style="color: #8b7cff;" >Edit Project</button>` : '<span class="locked-note">This project is in production and can no longer be edited. Contact us for changes.</span>'}${edits.length ? `<span class="edited-badge">Edited · ${edits.length} change${edits.length === 1 ? '' : 's'}</span>` : ''}</div>
-      <details class="client-project-details"><summary>View complete project details <span>⌄</span></summary><div class="client-project-detail-body"><div class="portal-detail-grid">${detail('Serial number', serial(project))}${detail('Service', services)}${detail('Phone / WhatsApp', project.phone)}${detail('Company', project.company)}${detail('Project status', statusLabels[project.status] || project.status)}${detail('Payment status', paymentLabels[payment] || payment)}${detail('Format', project.format)}${detail('Aimed length', project.aimed_length ? `${project.aimed_length}s` : '')}${detail('Color profile', project.color_profile)}${detail('Preferred music', project.preferred_music)}${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off')}${linkDetail('Final video link', project.final_video_link)}${linkDetail('Footage / project files', project.footage_link)}${linkDetail('Reference video', project.reference_link)}${detail('Creative notes', project.creative_notes, true)}${detail('Submitted', new Date(project.created_at).toLocaleString(), true)}${detail('Submission ID', project.submission_id, true)}${detail('Project ID', project.id, true)}</div><h3 class="history-title">Edit History</h3><div class="history-list">${renderHistory(edits)}</div></div></details>
+      <details class="client-project-details"><summary>View complete project details <span>⌄</span></summary><div class="client-project-detail-body"><div class="portal-detail-grid">${detail('Serial number', serial(project))}${detail('Service', services)}${detail('Phone / WhatsApp', project.phone)}${detail('Company', project.company)}${detail('Project status', statusLabels[project.status] || project.status)}${detail('Payment status', paymentLabels[payment] || payment)}${detail('Format', project.format)}${detail('Aimed length', project.aimed_length ? `${project.aimed_length}s` : '')}${detail('Color profile', project.color_profile)}${detail('Preferred music', project.preferred_music)}${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off')}${linkDetail('Final video link', project.final_video_link)}${linkDetail('Footage / project files', project.footage_link)}${linkDetail('Reference video', project.reference_link)}${detail('Creative notes and Script', project.creative_notes, true)}${detail('Submitted', new Date(project.created_at).toLocaleString(), true)}${detail('Submission ID', project.submission_id, true)}${detail('Project ID', project.id, true)}</div><h3 class="history-title">Edit History</h3><div class="history-list">${renderHistory(edits)}</div></div></details>
     </article>`;
   }).join('');
 }
@@ -121,6 +121,7 @@ async function loadProjects() {
   const auth = await profilePortal.requireUser();
   if (!auth) return;
   if (auth.profile?.role === 'editor') { location.replace('/editor/'); return; }
+  profilePortal.releaseGate();
   const name = auth.profile?.full_name || auth.user.user_metadata?.full_name || 'Client';
   profileCard.querySelector('.profile-avatar').textContent = name.charAt(0).toUpperCase();
   profileCard.querySelector('h2').textContent = name;

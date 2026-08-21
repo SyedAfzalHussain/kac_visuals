@@ -136,7 +136,7 @@ function renderProjectForms() {
       <label class="wide"><span>Footage / Cloud Storage Link</span><input data-field="footageLink" type="url" placeholder="https://drive.google.com/..."></label>
       <label class="wide"><span>Reference Video Link</span><input data-field="referenceLink" type="url" placeholder="https://..."></label>
       <div class="project-range-field"><div class="project-range-head"><span class="project-range-label">AI Add-On · $${AI_SCENE_PRICE}/Scene</span><output class="project-range-value" data-ai-output>Off</output></div><input data-field="aiScenes" type="range" min="0" max="5" step="1"><div class="project-range-scale"><span>Off</span><span>5 scenes</span></div></div>
-      <label class="wide"><span>Creative Notes *</span><textarea data-field="notes" rows="7" required placeholder="Describe the style, pacing, music, branding, deliverables, and anything else we should know."></textarea></label>
+      <label class="wide"><span>Creative notes and Script *</span><textarea data-field="notes" rows="7" required placeholder="Describe the style, pacing, music, branding, deliverables, and anything else we should know."></textarea></label>
     </div></div>
   </details>`).join('');
 
@@ -297,7 +297,7 @@ async function submitRequest() {
     `PROJECTS (${projects.length})`, `Estimated Total: $${total}`, '',
     ...projects.flatMap(project => [
       `VIDEO ${String(project.number).padStart(2, '0')} — ${project.service.name} ($${project.service.price + project.aiPrice})`,
-      `Project Name: ${project.projectName}`, `Format: ${project.format || 'To be discussed'}`, `Aimed Length: ${formatLength(project.aimedLength)}`, `Color Profile (LOG/Camera): ${project.colorProfile || 'Not provided'}`, `Preferred Music: ${project.music || 'To be discussed'}`, `AI Add-On: ${project.aiScenes ? `${project.aiScenes} scene${project.aiScenes === 1 ? '' : 's'} (+$${project.aiPrice})` : 'Off'}`, `Footage Link: ${project.footageLink || 'Not provided'}`, `Reference Link: ${project.referenceLink || 'Not provided'}`, `Creative Notes: ${project.notes}`, ''
+      `Project Name: ${project.projectName}`, `Format: ${project.format || 'To be discussed'}`, `Aimed Length: ${formatLength(project.aimedLength)}`, `Color Profile (LOG/Camera): ${project.colorProfile || 'Not provided'}`, `Preferred Music: ${project.music || 'To be discussed'}`, `AI Add-On: ${project.aiScenes ? `${project.aiScenes} scene${project.aiScenes === 1 ? '' : 's'} (+$${project.aiPrice})` : 'Off'}`, `Footage Link: ${project.footageLink || 'Not provided'}`, `Reference Link: ${project.referenceLink || 'Not provided'}`, `Creative notes and Script: ${project.notes}`, ''
     ])
   ].join('\n');
 

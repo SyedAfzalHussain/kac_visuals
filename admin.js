@@ -23,7 +23,7 @@ const paymentStatuses = [['unpaid','Unpaid'],['invoice_sent','Invoice Sent'],['p
 const DAY_MS = 24 * 60 * 60 * 1000;
 const fieldLabels = {
   project_name: 'Project name', status: 'Project status', payment_status: 'Payment status',
-  final_video_link: 'Final video link', creative_notes: 'Creative notes', admin_notes: 'Internal admin notes',
+  final_video_link: 'Final video link', creative_notes: 'Creative notes and Script', admin_notes: 'Internal admin notes',
   format: 'Format', preferred_music: 'Preferred music', footage_link: 'Footage / project files',
   reference_link: 'Reference video', aimed_length: 'Aimed length', color_profile: 'Color profile',
   estimated_total: 'Estimated total', unit_price: 'Base price', phone: 'Phone / WhatsApp',
@@ -47,7 +47,7 @@ const editableFields = [
   { key: 'client_budget', label: 'Client proposed budget ($)', type: 'number' },
   { key: 'footage_link', label: 'Footage / project files', type: 'url', wide: true },
   { key: 'reference_link', label: 'Reference video', type: 'url', wide: true },
-  { key: 'creative_notes', label: 'Creative notes', type: 'textarea', wide: true, required: true },
+  { key: 'creative_notes', label: 'Creative notes and Script', type: 'textarea', wide: true, required: true },
   { key: 'admin_notes', label: 'Internal admin notes', type: 'textarea', wide: true }
 ];
 let allProjects = [];
@@ -162,7 +162,7 @@ function openProjectDetails(project) {
   const phoneHref = String(project.phone || '').replace(/[^0-9+]/g, '');
   detailsContent.innerHTML = `<header class="portal-detail-heading"><p class="kicker">Complete Saved Request · ${escapeText(serial(project))}</p><h2 id="projectDetailsTitle">${escapeText(project.project_name)}</h2><div class="project-card-badges"><span class="status-badge">${escapeText(labelFor(statuses, project.status))}</span><span class="payment-badge" data-payment="${project.payment_status || 'unpaid'}">Payment · ${escapeText(labelFor(paymentStatuses, project.payment_status || 'unpaid'))}</span>${project.is_custom ? '<span class="custom-badge">Custom Project</span>' : ''}</div></header>
     <section class="portal-detail-section"><h3>Client Contact</h3><div class="portal-detail-grid">${detail('Full name', project.client_name)}<div class="portal-detail-item"><small>Email</small><a href="mailto:${encodeURIComponent(project.client_email || '')}">${escapeText(project.client_email)}</a></div><div class="portal-detail-item"><small>Phone / WhatsApp</small>${phoneHref ? `<a href="tel:${phoneHref}">${escapeText(project.phone)}</a>` : '<strong>Not provided</strong>'}</div>${detail('Company', project.company)}${detail('Account type', project.client_id ? 'Registered client' : 'Guest')}</div></section>
-    <section class="portal-detail-section"><h3>Project Brief</h3><div class="portal-detail-grid">${detail('Serial number', serial(project))}${detail('Service', services)}${detail('Video number', String(project.project_number || 1).padStart(2, '0'))}${detail('Format', project.format)}${detail('Aimed length', formatLength(project.aimed_length))}${detail('Color profile', project.color_profile)}${detail('Preferred music', project.preferred_music)}${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off')}${detail('Assigned editor', project.assigned_editor_name)}${linkDetail('Final video link', project.final_video_link)}${linkDetail('Footage / project files', project.footage_link)}${linkDetail('Reference video', project.reference_link)}${detail('Creative notes', project.creative_notes, true)}${detail('Internal admin notes', project.admin_notes, true)}</div></section>
+    <section class="portal-detail-section"><h3>Project Brief</h3><div class="portal-detail-grid">${detail('Serial number', serial(project))}${detail('Service', services)}${detail('Video number', String(project.project_number || 1).padStart(2, '0'))}${detail('Format', project.format)}${detail('Aimed length', formatLength(project.aimed_length))}${detail('Color profile', project.color_profile)}${detail('Preferred music', project.preferred_music)}${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off')}${detail('Assigned editor', project.assigned_editor_name)}${linkDetail('Final video link', project.final_video_link)}${linkDetail('Footage / project files', project.footage_link)}${linkDetail('Reference video', project.reference_link)}${detail('Creative notes and Script', project.creative_notes, true)}${detail('Internal admin notes', project.admin_notes, true)}</div></section>
     <section class="portal-detail-section"><h3>Pricing &amp; Record</h3><div class="portal-detail-grid">${detail('Base price', money(project.unit_price || Number(project.estimated_total) - Number(project.ai_addon_price || 0)))}${detail('AI add-on price', money(project.ai_addon_price))}${detail('Estimated total', money(project.estimated_total))}${project.client_budget ? detail('Client proposed budget', money(project.client_budget)) : ''}${detail('Payment status', labelFor(paymentStatuses, project.payment_status || 'unpaid'))}${detail('Project status', labelFor(statuses, project.status))}${detail('Submitted', dateTime(project.created_at))}${detail('Last updated', dateTime(project.updated_at))}${detail('Submission ID', project.submission_id, true)}${detail('Project ID', project.id, true)}</div></section>
     <section class="portal-detail-section"><h3>Edit History</h3><div class="history-list">${renderHistory(editsByProject.get(project.id))}</div></section>`;
   detailsDialog.showModal();
@@ -245,7 +245,7 @@ function buildPrintDoc(project, variant) {
       </div>
     </section>
 
-    ${project.creative_notes ? `<section class="print-section"><h2>Creative Notes</h2><p class="print-notes">${escapeText(project.creative_notes)}</p></section>` : ''}
+    ${project.creative_notes ? `<section class="print-section"><h2>Creative notes and Script</h2><p class="print-notes">${escapeText(project.creative_notes)}</p></section>` : ''}
 
     <footer class="print-foot">
       <span>${editorCopy ? 'Editor copy · brief only' : 'Internal copy'} · Generated ${escapeText(new Date().toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' }))}</span>
@@ -307,7 +307,7 @@ function exportExcelWorkbook() {
     'Final Video Link': project.final_video_link || '',
     'Footage Link': project.footage_link || '',
     'Reference Link': project.reference_link || '',
-    'Creative Notes': project.creative_notes || '',
+    'Creative notes and Script': project.creative_notes || '',
     'Admin Notes': project.admin_notes || '',
     'Edits Recorded': editsByProject.get(project.id)?.length || 0,
     'Submitted': project.created_at ? new Date(project.created_at).toLocaleString() : '',
@@ -407,6 +407,7 @@ async function loadProjects() {
 (async () => {
   const auth = await adminPortal.requireUser({ admin: true });
   if (!auth) return;
+  adminPortal.releaseGate();
   await loadProjects();
 })();
 
@@ -419,7 +420,7 @@ customToggle.addEventListener('click', () => {
   customOnly = !customOnly;
   customToggle.setAttribute('aria-pressed', String(customOnly));
   customToggle.classList.toggle('active', customOnly);
-  customToggle.textContent = customOnly ? '★ Showing Custom Only' : '★ Custom Projects';
+  customToggle.textContent = customOnly ? '★ Showing All Projects' : '★ Custom Projects';
   customToggle.style.color = '#8b7cff';
   render();
 });

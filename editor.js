@@ -62,7 +62,7 @@ function renderAssignments() {
         ${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'}` : 'Off')}
         ${linkDetail('Footage / project files', project.footage_link)}
         ${linkDetail('Reference video', project.reference_link)}
-        ${detail('Creative notes', project.creative_notes, true)}
+        ${detail('Creative notes and Script', project.creative_notes, true)}
       </div></div></details>
     </article>`;
   }).join('');
@@ -84,6 +84,7 @@ async function loadAssignments() {
   if (!auth) return;
   const role = auth.profile?.role;
   if (role !== 'editor' && role !== 'admin') { location.replace('/profile/'); return; }
+  editorPortal.releaseGate();
   const name = auth.profile?.full_name || auth.user.email?.split('@')[0] || 'Editor';
   editorCard.querySelector('.profile-avatar').textContent = name.charAt(0).toUpperCase();
   editorCard.querySelector('h2').textContent = name;

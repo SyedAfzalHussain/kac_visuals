@@ -81,3 +81,11 @@
 .dialog-topbar{display:flex;flex-wrap:wrap;gap:10px;padding:0 40px 18px 0;margin-bottom:20px;border-bottom:1px solid var(--border)}
 .editors-toolbar{margin-bottom:14px}
 .editors-toolbar input{width:100%;border-radius:4px}
+
+/* Auth gate — opaque cover so a privileged shell never paints before the role
+   check returns. Removed by KarrarPortal.releaseGate() once access is proven. */
+.auth-gate{position:fixed;inset:0;z-index:9999;display:grid;grid-auto-flow:row;place-content:center;justify-items:center;gap:16px;background:#070817;color:#747993;font:600 10px var(--label);letter-spacing:.22em;text-transform:uppercase}
+.auth-gate::before{content:"";width:26px;height:26px;border:2px solid rgba(139,124,255,.22);border-top-color:#8b7cff;border-radius:50%;animation:auth-spin .8s linear infinite}
+@keyframes auth-spin{to{transform:rotate(1turn)}}
+@media(prefers-reduced-motion:reduce){.auth-gate::before{animation:none}}
+@media print{.auth-gate{display:none!important}}
