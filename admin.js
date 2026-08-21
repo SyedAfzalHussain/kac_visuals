@@ -254,12 +254,23 @@ function buildPrintDoc(project, variant) {
   </article>`;
 }
 
-function exportProjectPdf(project, variant = 'full') {
+async function exportProjectPdf(project, variant = 'full') {
   printRoot.innerHTML = buildPrintDoc(project, variant);
   document.body.classList.add('printing');
   const cleanup = () => { document.body.classList.remove('printing'); printRoot.innerHTML = ''; };
   addEventListener('afterprint', cleanup, { once: true });
-  setTimeout(() => print(), 60);
+
+  // The print snapshot is taken synchronously, so the logo has to be decoded
+  // before we call print() or it comes out blank.
+  const logo = printRoot.querySelector('.print-mark');
+  if (logo) {
+    try {
+      if (!logo.complete) await new Promise(resolve => { logo.onload = logo.onerror = resolve; });
+      await logo.decode();
+    } catch { /* a missing logo must not block the export */ }
+  }
+  await new Promise(requestAnimationFrame);
+  print();
 }
 
 
