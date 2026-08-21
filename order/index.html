@@ -29,7 +29,7 @@
   <header class="order-header">
     <nav class="order-nav shell">
       <a class="order-brand" href="/"><img loading="lazy" decoding="async" width="1024" height="1536" src="/assets/karrar/logo.png" alt="Karrar Enterprises"><span>Karrar Enterprises</span></a>
-      <div class="order-nav-actions"><a href="/">← Back to Site</a><a id="portalLink" href="/login/?next=/order/" hidden>Client Login</a><a class="button button-gold button-small" href="/book-a-call">Book A Call</a></div>
+      <div class="order-nav-actions"><a href="/">← Back to Site</a><a id="portalLink" href="/login/?next=/order/" hidden>Client Login</a><a class="button button-outline button-small" href="/custom" style="color:#8b7cff">Custom Quote</a><a class="button button-gold button-small" href="/book-a-call">Book A Call</a></div>
     </nav>
   </header>
 
@@ -44,8 +44,15 @@
         <div class="order-workspace">
           <section class="order-step active" data-step="1">
             <div class="order-heading"><p class="kicker">Step 01</p><h1>Choose Your Edit</h1><p>Select one or more services and adjust the quantity.</p></div>
+            <a class="custom-cta" href="/custom">
+              <span class="custom-cta-mark" aria-hidden="true">&#9733;</span>
+              <span class="custom-cta-copy">
+                <strong>Need Something Custom?</strong>
+                <span>If none of the services below fit, request a custom quote instead &mdash; describe each video and set the price you have in mind.</span>
+              </span>
+              <span class="button button-gold button-large">Request A Custom Quote</span>
+            </a>
             <div class="order-products" id="orderProducts"></div>
-            <p class="custom-quote">Need something custom? <a href="/custom">Request a custom quote</a></p>
           </section>
 
           <section class="order-step" data-step="2">

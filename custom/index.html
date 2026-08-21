@@ -53,16 +53,9 @@
           </section>
 
           <section class="order-step" data-step="2">
-            <div class="order-heading"><p class="kicker">Step 02</p><h1>Your Project</h1><p>Share the essentials so we can price your custom quote accurately.</p></div>
-            <div class="order-form-grid">
-              <label class="wide"><span>Project Name *</span><input id="customProjectName" placeholder="e.g. 123 Ocean Drive Listing Video" required></label>
-              <label class="wide"><span>Project Description *</span><textarea id="customDetails" rows="6" required placeholder="Tell us about your project. What type of video do you need? Any specific style, music, or editing preferences?"></textarea></label>
-              <label><span>Number Of Videos *</span><input id="customVideoCount" type="number" min="1" max="100" value="1" required></label>
-              <label><span>Your Proposed Budget ($)</span><input id="customBudget" type="number" min="0" max="1000000" step="1" placeholder="Optional — what you have in mind"></label>
-              <label class="wide"><span>Reference Videos</span><input id="customReference" placeholder="Links to reference videos or examples you like"></label>
-              <label class="wide"><span>Files Link</span><input id="customFilesLink" type="url" placeholder="Google Drive or Dropbox link to your footage"></label>
-              <label class="wide"><span>Anything Else?</span><textarea id="customComments" rows="3" placeholder="Anything else we should know?"></textarea></label>
-            </div>
+            <div class="order-heading"><p class="kicker">Step 02</p><h1 id="customStepTitle">Tell Us About Your Video</h1><p id="customStepIntro">Share the essentials for this video. You set the price you have in mind — we confirm the final quote after reviewing your footage.</p></div>
+            <div class="project-contact"><label><span>Number Of Videos *</span><input id="customVideoCount" type="number" inputmode="numeric" min="1" max="20" value="1" required></label></div>
+            <div class="project-forms" id="customProjectForms"></div>
           </section>
 
           <section class="order-step" data-step="3">

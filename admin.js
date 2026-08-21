@@ -283,10 +283,21 @@ function buildPrintDoc(project, variant) {
   </article>`;
 }
 
+// Browsers name the saved PDF after document.title, so we swap it for the
+// duration of the print dialog and put the page title back afterwards.
+function printFileName(project, variant) {
+  const number = project.serial_number ? String(project.serial_number).padStart(3, '0') : 'Unnumbered';
+  const client = String(project.client_name || '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const suffix = variant === 'editor' ? 'Editor Copy' : 'Project Brief';
+  return `${number} - ${client || 'Client'} - ${suffix}`.slice(0, 120);
+}
+
 async function exportProjectPdf(project, variant = 'full') {
   printRoot.innerHTML = buildPrintDoc(project, variant);
   document.body.classList.add('printing');
-  const cleanup = () => { document.body.classList.remove('printing'); printRoot.innerHTML = ''; };
+  const pageTitle = document.title;
+  document.title = printFileName(project, variant);
+  const cleanup = () => { document.body.classList.remove('printing'); printRoot.innerHTML = ''; document.title = pageTitle; };
   addEventListener('afterprint', cleanup, { once: true });
 
   // The print snapshot is taken synchronously, so the logo has to be decoded

@@ -32,7 +32,7 @@
     <div class="admin-actionbar">
       <button class="button button-gold button-small" type="button" id="exportExcel">⤓ Export All To Excel</button>
       <button class="button button-outline button-small" type="button" id="customToggle" aria-pressed="false" style="color: #8b7cff;">★ Custom Projects</button>
-      <button class="button button-outline button-small" type="button" id="manageEditors" style="color: #8b7cff;">Manage Editors</button>
+      <button class="button button-outline button-small" type="button" id="manageEditors" style="color: #8b7cff; display: none;">Manage Editors</button>
       <a class="button button-outline button-small" href="/admin/deleted">Deleted Projects</a>
     </div>
     <div class="admin-toolbar"><input id="projectSearch" type="search" placeholder="Search client, email, company, or project"><select id="clientFilter"><option value="">All clients</option></select><select id="statusFilter"><option value="">All statuses</option><option value="submitted">Submitted</option><option value="reviewing">Reviewing</option><option value="awaiting_files">Awaiting Files</option><option value="in_progress">In Progress</option><option value="in_review">In Review</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><select id="paymentFilter"><option value="">All payments</option><option value="unpaid">Unpaid</option><option value="invoice_sent">Invoice Sent</option><option value="partially_paid">Partially Paid</option><option value="paid">Paid</option><option value="refunded">Refunded</option></select><select id="editorFilter" title="Filter by assigned editor and see their workload"><option value="">All editors</option></select></div>
