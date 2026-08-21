@@ -5,6 +5,7 @@ const filter = document.querySelector('#statusFilter');
 const clientFilter = document.querySelector('#clientFilter');
 const paymentFilter = document.querySelector('#paymentFilter');
 const customToggle = document.querySelector('#customToggle');
+const editorFilter = document.querySelector('#editorFilter');
 const adminMessage = document.querySelector('#adminMessage');
 const detailsDialog = document.querySelector('#projectDetailsDialog');
 const detailsContent = document.querySelector('#adminProjectDetails');
@@ -132,16 +133,44 @@ function projectRow(project) {
   </tr>`;
 }
 
+// Editors, each labelled with their live workload. "Active" excludes finished
+// and cancelled work, so the number reflects what they are actually on.
+const CLOSED = ['completed', 'cancelled'];
+function populateEditorFilter() {
+  const counts = new Map();
+  let unassigned = 0;
+  allProjects.forEach(project => {
+    if (!project.assigned_editor_id) { if (!CLOSED.includes(project.status)) unassigned += 1; return; }
+    const tally = counts.get(project.assigned_editor_id) || { active: 0, total: 0 };
+    tally.total += 1;
+    if (!CLOSED.includes(project.status)) tally.active += 1;
+    counts.set(project.assigned_editor_id, tally);
+  });
+  const rows = editors().map(person => {
+    const tally = counts.get(person.id) || { active: 0, total: 0 };
+    const name = person.full_name || person.email;
+    return `<option value="${person.id}">${escapeText(name)} · ${tally.active} active / ${tally.total} total</option>`;
+  }).join('');
+  const previous = editorFilter.value;
+  editorFilter.innerHTML = '<option value="">All editors</option>'
+    + `<option value="unassigned">Unassigned · ${unassigned} active</option>`
+    + rows;
+  editorFilter.value = previous;
+  if (editorFilter.value !== previous) editorFilter.value = '';
+}
+
 function render() {
   const query = search.value.toLowerCase().trim();
   const status = filter.value;
   const client = clientFilter.value;
   const payment = paymentFilter.value;
+  const assignedTo = editorFilter.value;
   const projects = allProjects.filter(project =>
     (!status || project.status === status)
     && (!payment || (project.payment_status || 'unpaid') === payment)
     && (!client || (project.client_email || project.client_name) === client)
     && (!customOnly || project.is_custom)
+    && (!assignedTo || (assignedTo === 'unassigned' ? !project.assigned_editor_id : project.assigned_editor_id === assignedTo))
     && (!query || [project.project_name,project.client_name,project.client_email,project.company,project.phone,project.submission_id,serial(project)].some(value => String(value || '').toLowerCase().includes(query))));
 
   if (!projects.length) { tbody.innerHTML = '<tr><td colspan="10">No projects found.</td></tr>'; return; }
@@ -401,6 +430,7 @@ async function loadProjects() {
     editsByProject.get(edit.project_id).push(edit);
   });
   populateClientFilter();
+  populateEditorFilter();
   render();
 }
 
@@ -415,6 +445,7 @@ search.addEventListener('input', render);
 filter.addEventListener('change', render);
 clientFilter.addEventListener('change', render);
 paymentFilter.addEventListener('change', render);
+editorFilter.addEventListener('change', render);
 
 customToggle.addEventListener('click', () => {
   customOnly = !customOnly;
