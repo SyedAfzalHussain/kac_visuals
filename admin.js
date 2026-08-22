@@ -146,11 +146,8 @@ function projectRow(project) {
   const assigned = project.assigned_editor_id || '';
   return `<tr${fresh ? ' class="fresh-row"' : ''}>
     <td><strong class="serial-cell">${escapeText(serial(project))}</strong></td>
-    <td><strong>${project.service_name ? `Video ${String(project.project_number || 1).padStart(2, '0')} · ` : ''}${escapeText(project.project_name)}</strong><span>${escapeText(project.format || '')}${project.aimed_length ? ` · ${formatLength(project.aimed_length)}` : ''}${project.color_profile ? ` · ${escapeText(project.color_profile)}` : ''}</span>${priorityBadge(project)}${fresh ? '<span class="new-badge">New</span>' : ''}${project.is_custom ? '<span class="custom-badge">Custom</span>' : ''}${editCount ? `<span class="edited-badge">Edited · ${editCount} change${editCount === 1 ? '' : 's'}</span>` : ''}<button class="admin-view-button" type="button" data-view-project="${project.id}">View all details</button></td>
+    <td><strong>${project.service_name ? `Video ${String(project.project_number || 1).padStart(2, '0')} · ` : ''}${escapeText(project.project_name)}</strong><span>${escapeText(servicesOf(project) || 'No service')} · ${new Date(project.created_at).toLocaleDateString()}</span>${priorityBadge(project)}${fresh ? '<span class="new-badge">New</span>' : ''}${project.is_custom ? '<span class="custom-badge">Custom</span>' : ''}${editCount ? `<span class="edited-badge">Edited · ${editCount} change${editCount === 1 ? '' : 's'}</span>` : ''}<button class="admin-view-button" type="button" data-view-project="${project.id}">View all details</button></td>
     <td><strong>${escapeText(project.client_name)}${project.client_id ? '' : ' · Guest'}</strong><span>${escapeText(project.client_email)}${project.company ? ` · ${escapeText(project.company)}` : ''}</span></td>
-    <td>${(project.services || []).map(service => `${escapeText(service.name)} × ${Number(service.quantity) || 0}`).join('<br>')}${project.ai_addon_scenes ? `<br><span>AI: ${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} (+${money(project.ai_addon_price)})</span>` : ''}</td>
-    <td>${money(project.estimated_total)}${project.client_budget ? `<br><span>Client budget ${money(project.client_budget)}</span>` : ''}</td>
-    <td>${new Date(project.created_at).toLocaleDateString()}</td>
     <td><select data-project-status="${project.id}">${statuses.map(([value,label]) => `<option value="${value}"${project.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
     <td><select data-payment-status="${project.id}">${paymentStatuses.map(([value,label]) => `<option value="${value}"${(project.payment_status || 'unpaid') === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
     <td><div class="workflow-cell"><select data-admin-stage="${project.id}">${adminStages.map(([value,label]) => `<option value="${value}"${(project.admin_stage || 'added') === value ? ' selected' : ''}>${label}</option>`).join('')}</select><span class="stage-chip" data-stage="${escapeText(project.editor_stage || 'received')}">Editor · ${escapeText(labelFor(editorStages, project.editor_stage || 'received'))}</span>${project.final_video_link ? `<span class="release-state" data-released="${Boolean(project.final_link_released)}">${project.final_link_released ? '● Released to client' : '● Held from client'}</span>` : ''}</div></td>
@@ -199,11 +196,11 @@ function render() {
     && (!assignedTo || (assignedTo === 'unassigned' ? !project.assigned_editor_id : project.assigned_editor_id === assignedTo))
     && (!query || [project.project_name,project.client_name,project.client_email,project.company,project.phone,project.submission_id,serial(project)].some(value => String(value || '').toLowerCase().includes(query))));
 
-  if (!projects.length) { tbody.innerHTML = '<tr><td colspan="11">No projects found.</td></tr>'; return; }
+  if (!projects.length) { tbody.innerHTML = '<tr><td colspan="8">No projects found.</td></tr>'; return; }
 
   const fresh = projects.filter(isFresh);
   const earlier = projects.filter(project => !isFresh(project));
-  const divider = (label, count, cls) => `<tr class="group-row ${cls}"><td colspan="11">${label}${count ? ` · ${count}` : ''}</td></tr>`;
+  const divider = (label, count, cls) => `<tr class="group-row ${cls}"><td colspan="8">${label}${count ? ` · ${count}` : ''}</td></tr>`;
 
   tbody.innerHTML = fresh.length
     ? divider('◆ Last 24 Hours', `${fresh.length} new`, 'fresh-group') + fresh.map(projectRow).join('')
