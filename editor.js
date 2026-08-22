@@ -161,24 +161,24 @@ assignmentsList.addEventListener('change', async event => {
   const chosen = select.value;
   select.disabled = true;
   stageNote(select, '');
-  // count:'exact' matters here — row security skips rows it will not let you
-  // write, and a skipped update comes back as success with nothing changed.
-  // Without the count that reads as "saved" and then silently reverts.
-  const { error, count } = await editorPortal.client.from('projects')
-    .update({ editor_stage: chosen }, { count: 'exact' })
+  const { error } = await editorPortal.client.from('projects')
+    .update({ editor_stage: chosen })
     .eq('id', id);
   select.disabled = false;
   if (error) {
     stageNote(select, error.message);
     return;
   }
-  if (count === 0) {
-    stageNote(select, 'The database refused this change. Your assignment or editor role may have been removed — ask the admin to check.');
-    select.value = assignments.find(item => item.id === id)?.editor_stage || 'received';
-    return;
-  }
+  // Row security skips rows it will not let you write and reports success with
+  // nothing changed, so the only trustworthy confirmation is reading the value
+  // back. Editors have no SELECT on projects — editor_assignments is the view
+  // they can read.
   await loadAssignments();
-  stageNote(select, '');
+  const saved = assignments.find(item => item.id === id);
+  if (saved && (saved.editor_stage || 'received') !== chosen) {
+    const control = assignmentsList.querySelector(`[data-editor-stage="${id}"]`);
+    if (control) stageNote(control, 'The database did not keep this change. Ask the admin to re-run supabase/workflow-migration.sql.');
+  }
 });
 
 assignmentsList.addEventListener('click', event => {
@@ -203,16 +203,19 @@ document.querySelector('#saveFinalLink').addEventListener('click', async () => {
   }
   linkMessage.textContent = 'Saving...';
   linkMessage.className = 'portal-message';
-  const { error, count } = await editorPortal.client.from('projects')
-    .update({ final_video_link: value || null }, { count: 'exact' })
-    .eq('id', editingId);
+  const savingId = editingId;
+  const { error } = await editorPortal.client.from('projects')
+    .update({ final_video_link: value || null })
+    .eq('id', savingId);
   if (error) {
     linkMessage.textContent = error.message;
     linkMessage.className = 'portal-message error';
     return;
   }
-  if (count === 0) {
-    linkMessage.textContent = 'The database refused this change. Your assignment or editor role may have been removed — ask the admin to check.';
+  await loadAssignments();
+  const stored = assignments.find(item => item.id === savingId);
+  if (stored && (stored.final_video_link || '') !== value) {
+    linkMessage.textContent = 'The database did not keep this change. Ask the admin to re-run supabase/workflow-migration.sql.';
     linkMessage.className = 'portal-message error';
     return;
   }

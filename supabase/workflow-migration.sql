@@ -253,3 +253,25 @@ using (
     and public.owns_project(project_edits.project_id)
   )
 );
+
+-- ---------------------------------------------------------------------------
+-- 6. Re-assert the editor write path
+--    The older migrations own these policies, and they are now guarded against
+--    being re-run — so this file has to be able to restore them on its own.
+-- ---------------------------------------------------------------------------
+
+drop policy if exists "Editors update assigned projects" on public.projects;
+create policy "Editors update assigned projects"
+on public.projects for update to authenticated
+using (assigned_editor_id = (select auth.uid()) and public.is_editor())
+with check (assigned_editor_id = (select auth.uid()) and public.is_editor());
+
+grant update on public.projects to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 7. Diagnostic — run separately if an editor still cannot save
+--    Expect one row per policy: "Editors update assigned projects" must appear.
+-- ---------------------------------------------------------------------------
+
+-- select policyname, cmd from pg_policies
+-- where schemaname = 'public' and tablename = 'projects' order by policyname;
