@@ -31,14 +31,24 @@
     <div class="portal-heading"><p class="kicker">Editor Workspace</p><h1>My Assignments</h1><p>Projects assigned to you. Add the final video link when your edit is delivered.</p></div>
     <div class="portal-grid">
       <aside class="portal-card profile-card" id="editorCard"><div class="profile-avatar">E</div><h2>Loading...</h2><p></p><span class="role-badge">Editor</span></aside>
-      <section><div class="projects-list" id="assignmentsList"><div class="portal-empty">Loading your assignments...</div></div></section>
+      <section>
+        <div class="admin-toolbar editor-toolbar">
+          <input id="assignmentSearch" type="search" placeholder="Search project, service, or #serial">
+          <select id="priorityFilter"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select>
+          <select id="stageFilter"><option value="">All my stages</option><option value="received">Received</option><option value="downloaded">Downloaded</option><option value="working">Working</option><option value="complete">Complete</option></select>
+          <select id="adminStageFilter"><option value="">All admin stages</option><option value="added">Added</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="needs_revision_admin">Needs Revision by Admin</option><option value="needs_revision_client">Needs Revision by Client</option></select>
+          <select id="assignmentSort"><option value="priority">Sort · Priority first</option><option value="newest">Sort · Newest first</option><option value="oldest">Sort · Oldest first</option><option value="stage">Sort · My progress</option></select>
+        </div>
+        <p class="assignment-count" id="assignmentCount"></p>
+        <div class="projects-list" id="assignmentsList"><div class="portal-empty">Loading your assignments...</div></div>
+      </section>
     </div>
   </div></main>
 
   <dialog class="project-dialog" id="linkDialog" aria-labelledby="linkTitle">
     <button class="project-dialog-close" type="button" data-close-link aria-label="Close">×</button>
     <header class="portal-detail-heading"><p class="kicker" style="color: #8b7cff;">Deliver</p><h2 id="linkTitle">Final Video Link</h2></header>
-    <p class="confirm-copy">Paste the link to the finished video. This is the only field you can change — everything else is managed by Karrar Enterprises.</p>
+    <p class="confirm-copy">Paste the link to the finished video. This and your progress stage are the only things you can change — everything else is managed by Karrar Enterprises.</p>
     <form id="linkForm" class="admin-edit-form">
       <label class="portal-field wide"><span>Final video link</span><input type="url" id="finalLinkInput" placeholder="https://drive.google.com/..."></label>
     </form>

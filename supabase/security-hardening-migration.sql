@@ -9,6 +9,26 @@
 --      number, admin notes, the final video link, or assign themselves an editor.
 
 -- ---------------------------------------------------------------------------
+-- STOP if this database has already run workflow-migration.sql.
+-- This file carries an older copy of guard_project_update(). Re-running it
+-- afterwards silently reverts that trigger to a body which discards
+-- editor_stage, so an editor's progress change saves and then reappears as
+-- "Received". workflow-migration.sql owns the current body and is idempotent —
+-- run that instead. The check below stops this file rather than let it happen.
+-- ---------------------------------------------------------------------------
+do $guard$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'projects' and column_name = 'editor_stage'
+  ) then
+    raise exception 'Superseded: this database is already past this migration. Run supabase/workflow-migration.sql instead.';
+  end if;
+end
+$guard$;
+
+
+-- ---------------------------------------------------------------------------
 -- 1. Editor access now requires the editor role, not just an assignment
 -- ---------------------------------------------------------------------------
 

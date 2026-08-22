@@ -4,10 +4,18 @@ const editorCard = document.querySelector('#editorCard');
 const linkDialog = document.querySelector('#linkDialog');
 const linkInput = document.querySelector('#finalLinkInput');
 const linkMessage = document.querySelector('#linkMessage');
+const assignmentSearch = document.querySelector('#assignmentSearch');
+const priorityFilter = document.querySelector('#priorityFilter');
+const stageFilter = document.querySelector('#stageFilter');
+const adminStageFilter = document.querySelector('#adminStageFilter');
+const assignmentSort = document.querySelector('#assignmentSort');
+const assignmentCount = document.querySelector('#assignmentCount');
 const statusLabels = { submitted: 'Submitted', reviewing: 'Reviewing', awaiting_files: 'Awaiting Files', in_progress: 'In Progress', in_review: 'In Review', completed: 'Completed', cancelled: 'Cancelled' };
 const priorityLabels = { low: 'Low', normal: 'Normal', high: 'High', urgent: 'Urgent' };
 const adminStageLabels = { added: 'Added', in_progress: 'In Progress', completed: 'Completed', needs_revision_admin: 'Needs Revision by Admin', needs_revision_client: 'Needs Revision by Client' };
 const editorStages = [['received','Received'],['downloaded','Downloaded'],['working','Working'],['complete','Complete']];
+const priorityRank = { urgent: 0, high: 1, normal: 2, low: 3 };
+const stageRank = { received: 0, downloaded: 1, working: 2, complete: 3 };
 let assignments = [];
 let editingId = null;
 
@@ -31,13 +39,51 @@ function linkDetail(label, value) {
   return `<div class="portal-detail-item wide"><small>${escapeText(label)}</small>${url ? `<a href="${url}" target="_blank" rel="noopener">Open saved link ↗</a><span>${escapeText(value)}</span>` : `<strong>${escapeText(value || 'Not provided')}</strong>`}${editorPortal.copyButton(value)}</div>`;
 }
 
+function visibleAssignments() {
+  const query = assignmentSearch.value.trim().toLowerCase();
+  const priority = priorityFilter.value;
+  const stage = stageFilter.value;
+  const adminStage = adminStageFilter.value;
+
+  const rows = assignments.filter(project =>
+    (!priority || (project.priority || 'normal') === priority)
+    && (!stage || (project.editor_stage || 'received') === stage)
+    && (!adminStage || (project.admin_stage || 'added') === adminStage)
+    && (!query || [project.project_name, project.service_name, serial(project), project.format, project.color_profile]
+      .some(value => String(value || '').toLowerCase().includes(query))));
+
+  const order = assignmentSort.value;
+  return rows.sort((a, b) => {
+    if (order === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+    if (order === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+    if (order === 'stage') {
+      const diff = (stageRank[a.editor_stage] ?? 0) - (stageRank[b.editor_stage] ?? 0);
+      return diff || (b.serial_number || 0) - (a.serial_number || 0);
+    }
+    // priority first, then the oldest job at that priority — that is the one
+    // that has been waiting longest.
+    const diff = (priorityRank[a.priority] ?? 2) - (priorityRank[b.priority] ?? 2);
+    return diff || new Date(a.created_at) - new Date(b.created_at);
+  });
+}
+
 // The editor sees the brief only — no client contact, pricing, or payment data.
 function renderAssignments() {
   if (!assignments.length) {
+    assignmentCount.textContent = '';
     assignmentsList.innerHTML = '<div class="portal-empty">No projects are assigned to you yet.</div>';
     return;
   }
-  assignmentsList.innerHTML = assignments.map(project => {
+  const rows = visibleAssignments();
+  const open = assignments.filter(project => (project.editor_stage || 'received') !== 'complete').length;
+  assignmentCount.textContent = rows.length === assignments.length
+    ? `${assignments.length} assignment${assignments.length === 1 ? '' : 's'} · ${open} still open`
+    : `Showing ${rows.length} of ${assignments.length} · ${open} still open`;
+  if (!rows.length) {
+    assignmentsList.innerHTML = '<div class="portal-empty">No assignments match these filters.</div>';
+    return;
+  }
+  assignmentsList.innerHTML = rows.map(project => {
     const services = (project.services || []).map(service => `${service.name} × ${Number(service.quantity) || 0}`).join(', ') || project.service_name || 'Not provided';
     const finalUrl = safeHttpUrl(project.final_video_link);
     return `<article class="project-card">
@@ -96,22 +142,43 @@ async function loadAssignments() {
   await loadAssignments();
 })();
 
+function stageNote(select, message, kind = 'error') {
+  assignmentsList.querySelectorAll('.stage-error').forEach(node => node.remove());
+  if (!message) return;
+  const note = document.createElement('p');
+  note.className = `portal-message ${kind} stage-error`;
+  note.textContent = message;
+  select.closest('.project-card-actions').appendChild(note);
+}
+
+[assignmentSearch, priorityFilter, stageFilter, adminStageFilter, assignmentSort]
+  .forEach(control => control.addEventListener('input', renderAssignments));
+
 assignmentsList.addEventListener('change', async event => {
   const select = event.target.closest('[data-editor-stage]');
   if (!select) return;
   const id = select.dataset.editorStage;
+  const chosen = select.value;
   select.disabled = true;
-  const { error } = await editorPortal.client.from('projects').update({ editor_stage: select.value }).eq('id', id);
+  stageNote(select, '');
+  // count:'exact' matters here — row security skips rows it will not let you
+  // write, and a skipped update comes back as success with nothing changed.
+  // Without the count that reads as "saved" and then silently reverts.
+  const { error, count } = await editorPortal.client.from('projects')
+    .update({ editor_stage: chosen }, { count: 'exact' })
+    .eq('id', id);
   select.disabled = false;
   if (error) {
-    assignmentsList.querySelectorAll('.stage-error').forEach(node => node.remove());
-    const note = document.createElement('p');
-    note.className = 'portal-message error stage-error';
-    note.textContent = error.message;
-    select.closest('.project-card-actions').appendChild(note);
+    stageNote(select, error.message);
+    return;
+  }
+  if (count === 0) {
+    stageNote(select, 'The database refused this change. Your assignment or editor role may have been removed — ask the admin to check.');
+    select.value = assignments.find(item => item.id === id)?.editor_stage || 'received';
     return;
   }
   await loadAssignments();
+  stageNote(select, '');
 });
 
 assignmentsList.addEventListener('click', event => {
@@ -136,9 +203,16 @@ document.querySelector('#saveFinalLink').addEventListener('click', async () => {
   }
   linkMessage.textContent = 'Saving...';
   linkMessage.className = 'portal-message';
-  const { error } = await editorPortal.client.from('projects').update({ final_video_link: value || null }).eq('id', editingId);
+  const { error, count } = await editorPortal.client.from('projects')
+    .update({ final_video_link: value || null }, { count: 'exact' })
+    .eq('id', editingId);
   if (error) {
     linkMessage.textContent = error.message;
+    linkMessage.className = 'portal-message error';
+    return;
+  }
+  if (count === 0) {
+    linkMessage.textContent = 'The database refused this change. Your assignment or editor role may have been removed — ask the admin to check.';
     linkMessage.className = 'portal-message error';
     return;
   }

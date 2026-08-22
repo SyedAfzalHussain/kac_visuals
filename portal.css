@@ -138,3 +138,9 @@
 .admin-table select{max-width:100%}
 .admin-table td:nth-child(4) select,.admin-table td:nth-child(5) select{min-width:120px}
 .workflow-cell{min-width:140px}
+
+/* The editor toolbar sits in the narrow right column, so it wraps. */
+.editor-toolbar{flex-wrap:wrap;margin-bottom:14px}
+.editor-toolbar input{flex:1 1 100%;min-width:0}
+.editor-toolbar select{flex:1 1 160px;min-width:0;border-radius:4px}
+.assignment-count{margin:0 0 18px;color:#747993;font:600 9px var(--label);letter-spacing:.12em;text-transform:uppercase}
