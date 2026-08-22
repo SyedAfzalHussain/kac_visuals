@@ -5,6 +5,9 @@ const linkDialog = document.querySelector('#linkDialog');
 const linkInput = document.querySelector('#finalLinkInput');
 const linkMessage = document.querySelector('#linkMessage');
 const statusLabels = { submitted: 'Submitted', reviewing: 'Reviewing', awaiting_files: 'Awaiting Files', in_progress: 'In Progress', in_review: 'In Review', completed: 'Completed', cancelled: 'Cancelled' };
+const priorityLabels = { low: 'Low', normal: 'Normal', high: 'High', urgent: 'Urgent' };
+const adminStageLabels = { added: 'Added', in_progress: 'In Progress', completed: 'Completed', needs_revision_admin: 'Needs Revision by Admin', needs_revision_client: 'Needs Revision by Client' };
+const editorStages = [['received','Received'],['downloaded','Downloaded'],['working','Working'],['complete','Complete']];
 let assignments = [];
 let editingId = null;
 
@@ -22,10 +25,10 @@ function safeHttpUrl(value) {
   if (!value) return '';
   try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
 }
-function detail(label, value, wide = false) { return `<div class="portal-detail-item${wide ? ' wide' : ''}"><small>${escapeText(label)}</small><strong>${escapeText(value || 'Not provided')}</strong></div>`; }
+function detail(label, value, wide = false, copyable = false) { return `<div class="portal-detail-item${wide ? ' wide' : ''}"><small>${escapeText(label)}</small><strong>${escapeText(value || 'Not provided')}</strong>${copyable ? editorPortal.copyButton(value) : ''}</div>`; }
 function linkDetail(label, value) {
   const url = safeHttpUrl(value);
-  return `<div class="portal-detail-item wide"><small>${escapeText(label)}</small>${url ? `<a href="${url}" target="_blank" rel="noopener">Open saved link ↗</a><span>${escapeText(value)}</span>` : `<strong>${escapeText(value || 'Not provided')}</strong>`}</div>`;
+  return `<div class="portal-detail-item wide"><small>${escapeText(label)}</small>${url ? `<a href="${url}" target="_blank" rel="noopener">Open saved link ↗</a><span>${escapeText(value)}</span>` : `<strong>${escapeText(value || 'Not provided')}</strong>`}${editorPortal.copyButton(value)}</div>`;
 }
 
 // The editor sees the brief only — no client contact, pricing, or payment data.
@@ -40,9 +43,9 @@ function renderAssignments() {
     return `<article class="project-card">
       <div class="project-card-head">
         <div><span class="project-sequence">${escapeText(serial(project))}${project.service_name ? ` · ${escapeText(project.service_name)}` : ''}</span><h2>${escapeText(project.project_name)}</h2><time>Assigned · ${new Date(project.created_at).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</time></div>
-        <div class="project-card-badges"><span class="status-badge">${statusLabels[project.status] || project.status}</span></div>
+        <div class="project-card-badges"><span class="status-badge">${statusLabels[project.status] || project.status}</span><span class="priority-badge" data-priority="${escapeText(project.priority || 'normal')}">Priority · ${escapeText(priorityLabels[project.priority] || 'Normal')}</span><span class="stage-chip" data-stage="${escapeText(project.admin_stage || 'added')}">Admin · ${escapeText(adminStageLabels[project.admin_stage] || 'Added')}</span></div>
       </div>
-      ${finalUrl ? `<div class="final-video-panel"><div><small>Delivered Final Video</small><a href="${finalUrl}" target="_blank" rel="noopener">${escapeText(project.final_video_link)}</a></div></div>` : ''}
+      ${finalUrl ? `<div class="final-video-panel"><div><small>Delivered Final Video${project.final_link_released ? ' · visible to client' : ' · not shown to the client yet'}</small><a href="${finalUrl}" target="_blank" rel="noopener">${escapeText(project.final_video_link)}</a></div>${editorPortal.copyButton(project.final_video_link)}</div>` : ''}
       <div class="project-meta">
         <div><small>Format</small><strong>${escapeText(project.format || 'To be discussed')}</strong></div>
         <div><small>Aimed Length</small><strong>${escapeText(formatLength(project.aimed_length) || 'Not provided')}</strong></div>
@@ -51,7 +54,7 @@ function renderAssignments() {
         <div><small>AI Add-On</small><strong>${project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'}` : 'Off'}</strong></div>
         <div><small>Service</small><strong>${escapeText(services)}</strong></div>
       </div>
-      <div class="project-card-actions"><button class="button button-gold button-small" type="button" data-set-link="${project.id}">${finalUrl ? 'Update Final Video Link' : 'Add Final Video Link'}</button></div>
+      <div class="project-card-actions"><label class="stage-select"><span>My progress</span><select data-editor-stage="${project.id}">${editorStages.map(([value, label]) => `<option value="${value}"${(project.editor_stage || 'received') === value ? ' selected' : ''}>${label}</option>`).join('')}</select></label><button class="button button-gold button-small" type="button" data-set-link="${project.id}">${finalUrl ? 'Update Final Video Link' : 'Add Final Video Link'}</button></div>
       <details class="client-project-details"><summary>View full brief <span>⌄</span></summary><div class="client-project-detail-body"><div class="portal-detail-grid">
         ${detail('Serial number', serial(project))}
         ${detail('Service', services)}
@@ -62,7 +65,7 @@ function renderAssignments() {
         ${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'}` : 'Off')}
         ${linkDetail('Footage / project files', project.footage_link)}
         ${linkDetail('Reference video', project.reference_link)}
-        ${detail('Creative notes and Script', project.creative_notes, true)}
+        ${detail('Creative notes and Script', project.creative_notes, true, true)}
       </div></div></details>
     </article>`;
   }).join('');
@@ -92,6 +95,24 @@ async function loadAssignments() {
   editorCard.querySelector('.role-badge').textContent = role === 'admin' ? 'Administrator' : 'Editor';
   await loadAssignments();
 })();
+
+assignmentsList.addEventListener('change', async event => {
+  const select = event.target.closest('[data-editor-stage]');
+  if (!select) return;
+  const id = select.dataset.editorStage;
+  select.disabled = true;
+  const { error } = await editorPortal.client.from('projects').update({ editor_stage: select.value }).eq('id', id);
+  select.disabled = false;
+  if (error) {
+    assignmentsList.querySelectorAll('.stage-error').forEach(node => node.remove());
+    const note = document.createElement('p');
+    note.className = 'portal-message error stage-error';
+    note.textContent = error.message;
+    select.closest('.project-card-actions').appendChild(note);
+    return;
+  }
+  await loadAssignments();
+});
 
 assignmentsList.addEventListener('click', event => {
   const button = event.target.closest('[data-set-link]');

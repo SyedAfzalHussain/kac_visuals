@@ -122,6 +122,7 @@ grant select on public.my_projects to authenticated;
 -- Direct row reads are now admin-only; clients go through my_projects, editors
 -- through editor_assignments. Updates are unaffected (they need no SELECT).
 drop policy if exists "Clients view own projects, admins view all" on public.projects;
+drop policy if exists "Admins view all projects" on public.projects;
 create policy "Admins view all projects"
 on public.projects for select to authenticated
 using (public.is_admin());

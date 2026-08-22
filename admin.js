@@ -21,6 +21,10 @@ const editorsSearch = document.querySelector('#editorsSearch');
 const printRoot = document.querySelector('#printRoot');
 const statuses = [['submitted','Submitted'],['reviewing','Reviewing'],['awaiting_files','Awaiting Files'],['in_progress','In Progress'],['in_review','In Review'],['completed','Completed'],['cancelled','Cancelled']];
 const paymentStatuses = [['unpaid','Unpaid'],['invoice_sent','Invoice Sent'],['partially_paid','Partially Paid'],['paid','Paid'],['refunded','Refunded']];
+// Internal to admin and editors — clients never receive these columns.
+const priorities = [['low','Low'],['normal','Normal'],['high','High'],['urgent','Urgent']];
+const adminStages = [['added','Added'],['in_progress','In Progress'],['completed','Completed'],['needs_revision_admin','Needs Revision by Admin'],['needs_revision_client','Needs Revision by Client']];
+const editorStages = [['received','Received'],['downloaded','Downloaded'],['working','Working'],['complete','Complete']];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const fieldLabels = {
   project_name: 'Project name', status: 'Project status', payment_status: 'Payment status',
@@ -29,7 +33,9 @@ const fieldLabels = {
   reference_link: 'Reference video', aimed_length: 'Aimed length', color_profile: 'Color profile',
   estimated_total: 'Estimated total', unit_price: 'Base price', phone: 'Phone / WhatsApp',
   company: 'Company', client_name: 'Client name', client_email: 'Client email',
-  service_name: 'Service', ai_addon_scenes: 'AI add-on scenes'
+  service_name: 'Service', ai_addon_scenes: 'AI add-on scenes',
+  priority: 'Priority', admin_stage: 'Workflow stage (admin)', editor_stage: 'Workflow stage (editor)',
+  final_link_released: 'Final video released to client'
 };
 const editableFields = [
   { key: 'project_name', label: 'Project name', type: 'text', required: true },
@@ -39,7 +45,9 @@ const editableFields = [
   { key: 'company', label: 'Company', type: 'text' },
   { key: 'status', label: 'Project status', type: 'select', options: statuses },
   { key: 'payment_status', label: 'Payment status', type: 'select', options: paymentStatuses },
-  { key: 'final_video_link', label: 'Final video link (shown to client)', type: 'url', wide: true },
+  { key: 'priority', label: 'Priority (internal)', type: 'select', options: priorities },
+  { key: 'admin_stage', label: 'Workflow stage (internal)', type: 'select', options: adminStages },
+  { key: 'final_video_link', label: 'Final video link (internal until released)', type: 'url', wide: true },
   { key: 'format', label: 'Format', type: 'text' },
   { key: 'aimed_length', label: 'Aimed length (seconds)', type: 'number' },
   { key: 'color_profile', label: 'Color profile', type: 'text' },
@@ -77,15 +85,19 @@ function safeHttpUrl(value) {
   if (!value) return '';
   try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
 }
-function detail(label, value, wide = false) { return `<div class="portal-detail-item${wide ? ' wide' : ''}"><small>${escapeText(label)}</small><strong>${escapeText(value || 'Not provided')}</strong></div>`; }
+function detail(label, value, wide = false, copyable = false) { return `<div class="portal-detail-item${wide ? ' wide' : ''}"><small>${escapeText(label)}</small><strong>${escapeText(value || 'Not provided')}</strong>${copyable ? adminPortal.copyButton(value) : ''}</div>`; }
 function linkDetail(label, value) {
   const url = safeHttpUrl(value);
-  return `<div class="portal-detail-item wide"><small>${escapeText(label)}</small>${url ? `<a href="${url}" target="_blank" rel="noopener">Open saved link ↗</a><span>${escapeText(value)}</span>` : `<strong>${escapeText(value || 'Not provided')}</strong>`}</div>`;
+  return `<div class="portal-detail-item wide"><small>${escapeText(label)}</small>${url ? `<a href="${url}" target="_blank" rel="noopener">Open saved link ↗</a><span>${escapeText(value)}</span>` : `<strong>${escapeText(value || 'Not provided')}</strong>`}${adminPortal.copyButton(value)}</div>`;
 }
 function historyValue(field, value) {
   if (value === null || value === '') return 'Empty';
   if (field === 'status') return labelFor(statuses, value);
   if (field === 'payment_status') return labelFor(paymentStatuses, value);
+  if (field === 'priority') return labelFor(priorities, value);
+  if (field === 'admin_stage') return labelFor(adminStages, value);
+  if (field === 'editor_stage') return labelFor(editorStages, value);
+  if (field === 'final_link_released') return value === 'true' ? 'Visible to client' : 'Hidden from client';
   return value;
 }
 function servicesOf(project) {
@@ -95,6 +107,11 @@ function editors() { return people.filter(person => person.role === 'editor'); }
 // An assignment survives in the row even if the person is no longer an editor.
 // The dropdown lists editors only, so without this the cell would quietly read
 // "Unassigned" while the project stayed pointed at someone who cannot see it.
+function priorityBadge(project) {
+  const value = project.priority || 'normal';
+  if (value === 'normal') return '';   // the default is noise on every row
+  return `<span class="priority-badge" data-priority="${value}">${escapeText(labelFor(priorities, value))}</span>`;
+}
 function staleAssignee(project) {
   if (!project.assigned_editor_id) return null;
   const person = people.find(item => item.id === project.assigned_editor_id);
@@ -129,13 +146,14 @@ function projectRow(project) {
   const assigned = project.assigned_editor_id || '';
   return `<tr${fresh ? ' class="fresh-row"' : ''}>
     <td><strong class="serial-cell">${escapeText(serial(project))}</strong></td>
-    <td><strong>${project.service_name ? `Video ${String(project.project_number || 1).padStart(2, '0')} · ` : ''}${escapeText(project.project_name)}</strong><span>${escapeText(project.format || '')}${project.aimed_length ? ` · ${formatLength(project.aimed_length)}` : ''}${project.color_profile ? ` · ${escapeText(project.color_profile)}` : ''}</span>${fresh ? '<span class="new-badge">New</span>' : ''}${project.is_custom ? '<span class="custom-badge">Custom</span>' : ''}${editCount ? `<span class="edited-badge">Edited · ${editCount} change${editCount === 1 ? '' : 's'}</span>` : ''}<button class="admin-view-button" type="button" data-view-project="${project.id}">View all details</button></td>
+    <td><strong>${project.service_name ? `Video ${String(project.project_number || 1).padStart(2, '0')} · ` : ''}${escapeText(project.project_name)}</strong><span>${escapeText(project.format || '')}${project.aimed_length ? ` · ${formatLength(project.aimed_length)}` : ''}${project.color_profile ? ` · ${escapeText(project.color_profile)}` : ''}</span>${priorityBadge(project)}${fresh ? '<span class="new-badge">New</span>' : ''}${project.is_custom ? '<span class="custom-badge">Custom</span>' : ''}${editCount ? `<span class="edited-badge">Edited · ${editCount} change${editCount === 1 ? '' : 's'}</span>` : ''}<button class="admin-view-button" type="button" data-view-project="${project.id}">View all details</button></td>
     <td><strong>${escapeText(project.client_name)}${project.client_id ? '' : ' · Guest'}</strong><span>${escapeText(project.client_email)}${project.company ? ` · ${escapeText(project.company)}` : ''}</span></td>
     <td>${(project.services || []).map(service => `${escapeText(service.name)} × ${Number(service.quantity) || 0}`).join('<br>')}${project.ai_addon_scenes ? `<br><span>AI: ${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} (+${money(project.ai_addon_price)})</span>` : ''}</td>
     <td>${money(project.estimated_total)}${project.client_budget ? `<br><span>Client budget ${money(project.client_budget)}</span>` : ''}</td>
     <td>${new Date(project.created_at).toLocaleDateString()}</td>
     <td><select data-project-status="${project.id}">${statuses.map(([value,label]) => `<option value="${value}"${project.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
     <td><select data-payment-status="${project.id}">${paymentStatuses.map(([value,label]) => `<option value="${value}"${(project.payment_status || 'unpaid') === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
+    <td><div class="workflow-cell"><select data-admin-stage="${project.id}">${adminStages.map(([value,label]) => `<option value="${value}"${(project.admin_stage || 'added') === value ? ' selected' : ''}>${label}</option>`).join('')}</select><span class="stage-chip" data-stage="${escapeText(project.editor_stage || 'received')}">Editor · ${escapeText(labelFor(editorStages, project.editor_stage || 'received'))}</span>${project.final_video_link ? `<span class="release-state" data-released="${Boolean(project.final_link_released)}">${project.final_link_released ? '● Released to client' : '● Held from client'}</span>` : ''}</div></td>
     <td><select data-assign-editor="${project.id}"><option value="">Unassigned</option>${editors().map(person => `<option value="${person.id}"${assigned === person.id ? ' selected' : ''}>${escapeText(person.full_name || person.email)}</option>`).join('')}${staleAssignee(project) ? `<option value="${staleAssignee(project).id}" selected>${escapeText(staleAssignee(project).full_name || staleAssignee(project).email)} · not an editor</option>` : ''}</select>${staleAssignee(project) ? '<span class="assign-warning">Assignee is not an editor — they cannot see this project.</span>' : ''}</td>
     <td><div class="row-actions"><button class="admin-row-button" type="button" data-edit-project="${project.id}">Edit</button><button class="admin-row-button danger" type="button" data-delete-project="${project.id}">Delete</button></div></td>
   </tr>`;
@@ -181,16 +199,41 @@ function render() {
     && (!assignedTo || (assignedTo === 'unassigned' ? !project.assigned_editor_id : project.assigned_editor_id === assignedTo))
     && (!query || [project.project_name,project.client_name,project.client_email,project.company,project.phone,project.submission_id,serial(project)].some(value => String(value || '').toLowerCase().includes(query))));
 
-  if (!projects.length) { tbody.innerHTML = '<tr><td colspan="10">No projects found.</td></tr>'; return; }
+  if (!projects.length) { tbody.innerHTML = '<tr><td colspan="11">No projects found.</td></tr>'; return; }
 
   const fresh = projects.filter(isFresh);
   const earlier = projects.filter(project => !isFresh(project));
-  const divider = (label, count, cls) => `<tr class="group-row ${cls}"><td colspan="10">${label}${count ? ` · ${count}` : ''}</td></tr>`;
+  const divider = (label, count, cls) => `<tr class="group-row ${cls}"><td colspan="11">${label}${count ? ` · ${count}` : ''}</td></tr>`;
 
   tbody.innerHTML = fresh.length
     ? divider('◆ Last 24 Hours', `${fresh.length} new`, 'fresh-group') + fresh.map(projectRow).join('')
       + (earlier.length ? divider('Earlier', '', 'older-group') + earlier.map(projectRow).join('') : '')
     : projects.map(projectRow).join('');
+}
+
+// Priority and both stages never reach the client — my_projects does not
+// select them, and this block only ever renders in the admin dialog.
+function workflowSection(project) {
+  return `<section class="portal-detail-section"><h3>Workflow · Internal</h3>
+    <div class="portal-detail-grid">${detail('Priority', labelFor(priorities, project.priority || 'normal'))}${detail('Admin stage', labelFor(adminStages, project.admin_stage || 'added'))}${detail('Editor stage', labelFor(editorStages, project.editor_stage || 'received'))}${detail('Assigned editor', project.assigned_editor_name)}</div>
+    ${releasePanel(project)}</section>`;
+}
+
+function releasePanel(project) {
+  const released = Boolean(project.final_link_released);
+  const hasLink = Boolean(safeHttpUrl(project.final_video_link));
+  const completed = (project.admin_stage || 'added') === 'completed';
+  // Releasing is deliberate: it needs a link and a finished project. Taking it
+  // back only needs the admin to change their mind.
+  const blocked = !hasLink || (!released && !completed);
+  let note = '';
+  if (!hasLink) note = 'No final video link has been added yet.';
+  else if (!released && !completed) note = 'Set the admin stage to Completed to release it.';
+  else if (released && project.final_link_released_at) note = `Released ${dateTime(project.final_link_released_at)}.`;
+  return `<div class="release-panel">
+    <p><strong>${released ? 'The client can see the final video.' : 'The final video is between you and the editor.'}</strong> ${escapeText(note)}</p>
+    <button class="button ${released ? 'button-outline' : 'button-gold'} button-small" type="button" id="toggleRelease"${blocked ? ' disabled' : ''}${released ? ' style="color:#8b7cff"' : ''}>${released ? 'Hide from client' : 'Release to client'}</button>
+  </div>`;
 }
 
 function openProjectDetails(project) {
@@ -199,10 +242,11 @@ function openProjectDetails(project) {
   const phoneHref = String(project.phone || '').replace(/[^0-9+]/g, '');
   detailsContent.innerHTML = `<header class="portal-detail-heading"><p class="kicker">Complete Saved Request · ${escapeText(serial(project))}</p><h2 id="projectDetailsTitle">${escapeText(project.project_name)}</h2><div class="project-card-badges"><span class="status-badge">${escapeText(labelFor(statuses, project.status))}</span><span class="payment-badge" data-payment="${project.payment_status || 'unpaid'}">Payment · ${escapeText(labelFor(paymentStatuses, project.payment_status || 'unpaid'))}</span>${project.is_custom ? '<span class="custom-badge">Custom Project</span>' : ''}</div></header>
     <section class="portal-detail-section"><h3>Client Contact</h3><div class="portal-detail-grid">${detail('Full name', project.client_name)}<div class="portal-detail-item"><small>Email</small><a href="mailto:${encodeURIComponent(project.client_email || '')}">${escapeText(project.client_email)}</a></div><div class="portal-detail-item"><small>Phone / WhatsApp</small>${phoneHref ? `<a href="tel:${phoneHref}">${escapeText(project.phone)}</a>` : '<strong>Not provided</strong>'}</div>${detail('Company', project.company)}${detail('Account type', project.client_id ? 'Registered client' : 'Guest')}</div></section>
-    <section class="portal-detail-section"><h3>Project Brief</h3><div class="portal-detail-grid">${detail('Serial number', serial(project))}${detail('Service', services)}${detail('Video number', String(project.project_number || 1).padStart(2, '0'))}${detail('Format', project.format)}${detail('Aimed length', formatLength(project.aimed_length))}${detail('Color profile', project.color_profile)}${detail('Preferred music', project.preferred_music)}${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off')}${detail('Assigned editor', project.assigned_editor_name)}${linkDetail('Final video link', project.final_video_link)}${linkDetail('Footage / project files', project.footage_link)}${linkDetail('Reference video', project.reference_link)}${detail('Creative notes and Script', project.creative_notes, true)}${detail('Internal admin notes', project.admin_notes, true)}</div></section>
+    <section class="portal-detail-section"><h3>Project Brief</h3><div class="portal-detail-grid">${detail('Serial number', serial(project))}${detail('Service', services)}${detail('Video number', String(project.project_number || 1).padStart(2, '0'))}${detail('Format', project.format)}${detail('Aimed length', formatLength(project.aimed_length))}${detail('Color profile', project.color_profile)}${detail('Preferred music', project.preferred_music)}${detail('AI add-on', project.ai_addon_scenes ? `${project.ai_addon_scenes} scene${project.ai_addon_scenes === 1 ? '' : 's'} · ${money(project.ai_addon_price)}` : 'Off')}${detail('Assigned editor', project.assigned_editor_name)}${linkDetail('Final video link', project.final_video_link)}${linkDetail('Footage / project files', project.footage_link)}${linkDetail('Reference video', project.reference_link)}${detail('Creative notes and Script', project.creative_notes, true, true)}${detail('Internal admin notes', project.admin_notes, true, true)}</div></section>
+    ${workflowSection(project)}
     <section class="portal-detail-section"><h3>Pricing &amp; Record</h3><div class="portal-detail-grid">${detail('Base price', money(project.unit_price || Number(project.estimated_total) - Number(project.ai_addon_price || 0)))}${detail('AI add-on price', money(project.ai_addon_price))}${detail('Estimated total', money(project.estimated_total))}${project.client_budget ? detail('Client proposed budget', money(project.client_budget)) : ''}${detail('Payment status', labelFor(paymentStatuses, project.payment_status || 'unpaid'))}${detail('Project status', labelFor(statuses, project.status))}${detail('Submitted', dateTime(project.created_at))}${detail('Last updated', dateTime(project.updated_at))}${detail('Submission ID', project.submission_id, true)}${detail('Project ID', project.id, true)}</div></section>
     <section class="portal-detail-section"><h3>Edit History</h3><div class="history-list">${renderHistory(editsByProject.get(project.id))}</div></section>`;
-  detailsDialog.showModal();
+  if (!detailsDialog.open) detailsDialog.showModal();
 }
 
 // --- PDF: branded, print-only brief. AI add-on price is never printed.
@@ -251,6 +295,7 @@ function buildPrintDoc(project, variant) {
         <h1>${escapeText(project.project_name)}</h1>
         <div class="print-pills">
           <span class="print-pill">${escapeText(labelFor(statuses, project.status))}</span>
+          <span class="print-pill">Priority · ${escapeText(labelFor(priorities, project.priority || 'normal'))}</span>
           <span class="print-pill ghost">Submitted ${escapeText(dateTime(project.created_at))}</span>
           ${project.is_custom ? '<span class="print-pill ghost">Custom Project</span>' : ''}
         </div>
@@ -270,6 +315,8 @@ function buildPrintDoc(project, variant) {
         ${printPair('Preferred music', project.preferred_music)}
         ${printPair('AI add-on', aiLabel)}
         ${printPair('Assigned editor', project.assigned_editor_name)}
+        ${printPair('Editor stage', labelFor(editorStages, project.editor_stage || 'received'))}
+        ${editorCopy ? '' : printPair('Admin stage', labelFor(adminStages, project.admin_stage || 'added'))}
       </div>
     </section>
 
@@ -352,6 +399,10 @@ function exportExcelWorkbook() {
     'Status': labelFor(statuses, project.status),
     'Payment Status': labelFor(paymentStatuses, project.payment_status || 'unpaid'),
     'Assigned Editor': project.assigned_editor_name || '',
+    'Priority': labelFor(priorities, project.priority || 'normal'),
+    'Admin Stage': labelFor(adminStages, project.admin_stage || 'added'),
+    'Editor Stage': labelFor(editorStages, project.editor_stage || 'received'),
+    'Final Link Released': project.final_link_released ? 'Yes' : 'No',
     'Final Video Link': project.final_video_link || '',
     'Footage Link': project.footage_link || '',
     'Reference Link': project.reference_link || '',
@@ -521,6 +572,31 @@ editorsList.addEventListener('click', async event => {
   editorsMessage.className = 'portal-message success';
 });
 
+// Releasing the final video to the client is its own explicit action.
+detailsContent.addEventListener('click', async event => {
+  if (!event.target.closest('#toggleRelease') || !detailProjectId) return;
+  const project = allProjects.find(item => item.id === detailProjectId);
+  if (!project) return;
+  const button = event.target.closest('#toggleRelease');
+  const releasing = !project.final_link_released;
+  button.disabled = true;
+  button.textContent = releasing ? 'Releasing...' : 'Hiding...';
+  const { error } = await adminPortal.client.from('projects')
+    .update({ final_link_released: releasing }).eq('id', detailProjectId);
+  if (error) {
+    button.disabled = false;
+    adminMessage.textContent = error.message;
+    adminMessage.className = 'portal-message error';
+    detailsDialog.close();
+    return;
+  }
+  await loadProjects();
+  const updated = allProjects.find(item => item.id === detailProjectId);
+  if (updated) openProjectDetails(updated);
+  adminMessage.textContent = releasing ? 'Final video released to the client.' : 'Final video hidden from the client.';
+  adminMessage.className = 'portal-message success';
+});
+
 tbody.addEventListener('click', event => {
   const viewButton = event.target.closest('[data-view-project]');
   const editButton = event.target.closest('[data-edit-project]');
@@ -545,10 +621,15 @@ tbody.addEventListener('change', async event => {
   const projectSelect = event.target.closest('[data-project-status]');
   const paymentSelect = event.target.closest('[data-payment-status]');
   const editorSelect = event.target.closest('[data-assign-editor]');
-  if (!projectSelect && !paymentSelect && !editorSelect) return;
+  const stageSelect = event.target.closest('[data-admin-stage]');
+  if (!projectSelect && !paymentSelect && !editorSelect && !stageSelect) return;
 
   let id, payload, label;
-  if (editorSelect) {
+  if (stageSelect) {
+    id = stageSelect.dataset.adminStage;
+    payload = { admin_stage: stageSelect.value };
+    label = 'Workflow stage';
+  } else if (editorSelect) {
     id = editorSelect.dataset.assignEditor;
     const person = people.find(item => item.id === editorSelect.value);
     payload = { assigned_editor_id: person?.id || null, assigned_editor_name: person ? (person.full_name || person.email) : null };

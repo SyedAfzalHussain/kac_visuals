@@ -91,3 +91,40 @@
 @media print{.auth-gate{display:none!important}}
 
 .assign-warning{display:block;margin-top:6px;color:#ffb4b4;font-size:11px;line-height:1.4}
+
+/* Copy-to-clipboard buttons sit in the corner of a detail cell. */
+.portal-detail-item{position:relative}
+.portal-detail-item:has(.copy-button) small{padding-right:30px}
+.copy-button{position:absolute;top:9px;right:9px;display:grid;place-items:center;width:26px;height:26px;padding:0;border:1px solid var(--border);border-radius:5px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);cursor:pointer;transition:.2s}
+.copy-button:hover{color:#8b7cff;border-color:rgba(139,124,255,.55);background:rgba(139,124,255,.1)}
+.copy-button svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.copy-button.copied{color:#7ce7a2;border-color:rgba(124,231,162,.5);background:rgba(124,231,162,.12)}
+.copy-button.copy-failed{color:#ffb4b4;border-color:rgba(255,180,180,.5)}
+.copy-button.copied svg,.copy-button.copy-failed svg{display:none}
+.copy-button.copied::after{content:'✓';font-size:13px;line-height:1}
+.copy-button.copy-failed::after{content:'!';font:700 13px/1 var(--label)}
+.final-video-panel{position:relative}
+.final-video-panel .copy-button{top:14px;right:14px}
+
+/* Priority + internal workflow stages (admin and editor only). */
+.priority-badge,.stage-chip{display:inline-block;margin-top:8px;margin-right:6px;padding:4px 8px;border-radius:50px;border:1px solid var(--border);font:600 8px var(--label);letter-spacing:.1em;text-transform:uppercase}
+.priority-badge[data-priority="urgent"]{border-color:rgba(255,120,120,.5);background:rgba(255,120,120,.12);color:#ff9d9d}
+.priority-badge[data-priority="high"]{border-color:rgba(255,190,120,.5);background:rgba(255,190,120,.12);color:#ffc887}
+.priority-badge[data-priority="normal"]{color:#9aa0b8}
+.priority-badge[data-priority="low"]{color:#7f8499}
+.stage-chip{color:#a99cff;border-color:rgba(139,124,255,.35);background:rgba(139,124,255,.09)}
+.stage-chip[data-stage="complete"],.stage-chip[data-stage="completed"]{color:#7ce7a2;border-color:rgba(124,231,162,.4);background:rgba(124,231,162,.1)}
+.stage-chip[data-stage="needs_revision_admin"],.stage-chip[data-stage="needs_revision_client"]{color:#ffb4b4;border-color:rgba(255,180,180,.4);background:rgba(255,180,180,.1)}
+.workflow-cell{display:grid;gap:6px;min-width:150px}
+.workflow-cell .stage-chip{margin:0;justify-self:start}
+.release-panel{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,.02)}
+.release-panel p{margin:0;flex:1;min-width:220px;color:#9aa0b8;font-size:12px;line-height:1.6}
+.release-panel strong{color:#fff}
+.release-state{font:600 9px var(--label);letter-spacing:.1em;text-transform:uppercase}
+.release-state[data-released="true"]{color:#7ce7a2}
+.release-state[data-released="false"]{color:#ffc887}
+.release-panel .button[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.stage-select{display:flex;align-items:center;gap:9px;margin-right:auto}
+.stage-select>span{color:#747993;font:600 8px var(--label);letter-spacing:.11em;text-transform:uppercase}
+.stage-select select{min-width:150px;border:1px solid var(--border);border-radius:4px;background:#0b0e22;color:#fff;padding:9px 11px;font:400 13px var(--body);outline:none}
+.stage-error{flex:1 0 100%;margin:6px 0 0}

@@ -55,6 +55,51 @@
     return { user: currentUser, profile: await profile(currentUser.id) };
   }
 
+  // --- Copy-to-clipboard, shared by every portal -----------------------------
+  function escapeAttr(value = '') {
+    return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Renders nothing when there is nothing to copy, so callers can inline it.
+  function copyButton(value, label = 'Copy') {
+    if (!value) return '';
+    return `<button class="copy-button" type="button" data-copy="${escapeAttr(value)}" title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>`;
+  }
+
+  async function writeClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch { /* insecure context, or the user denied permission */ }
+    try {
+      // execCommand is deprecated but still the only fallback that works
+      // without clipboard permission.
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(area);
+      area.select();
+      const copied = document.execCommand('copy');
+      area.remove();
+      return copied;
+    } catch { return false; }
+  }
+
+  document.addEventListener('click', async event => {
+    const button = event.target.closest('[data-copy]');
+    if (!button) return;
+    event.preventDefault();
+    const copied = await writeClipboard(button.dataset.copy);
+    button.classList.add(copied ? 'copied' : 'copy-failed');
+    button.setAttribute('aria-label', copied ? 'Copied' : 'Copy failed');
+    setTimeout(() => {
+      button.classList.remove('copied', 'copy-failed');
+      button.setAttribute('aria-label', 'Copy');
+    }, 1400);
+  });
+
   async function signOut() {
     if (client) await client.auth.signOut();
     location.replace('/login/');
@@ -65,5 +110,5 @@
   // this only once it is satisfied with the role it got back.
   function releaseGate() { document.querySelector('#authGate')?.remove(); }
 
-  window.KarrarPortal = { config, configured, client, safeNext, user, profile, requireUser, signOut, releaseGate };
+  window.KarrarPortal = { config, configured, client, safeNext, user, profile, requireUser, signOut, releaseGate, copyButton, escapeAttr };
 })();
