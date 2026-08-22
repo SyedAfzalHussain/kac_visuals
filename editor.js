@@ -161,23 +161,21 @@ assignmentsList.addEventListener('change', async event => {
   const chosen = select.value;
   select.disabled = true;
   stageNote(select, '');
-  const { error } = await editorPortal.client.from('projects')
-    .update({ editor_stage: chosen })
-    .eq('id', id);
+  // Not a direct table update: row security applies SELECT policies to the
+  // WHERE clause of an UPDATE, and editors have no SELECT on projects, so the
+  // write would silently match nothing. The RPC runs as definer and the update
+  // guard still decides what an editor may change.
+  const { error } = await editorPortal.client.rpc('set_editor_stage', { p_id: id, p_stage: chosen });
   select.disabled = false;
   if (error) {
     stageNote(select, error.message);
     return;
   }
-  // Row security skips rows it will not let you write and reports success with
-  // nothing changed, so the only trustworthy confirmation is reading the value
-  // back. Editors have no SELECT on projects — editor_assignments is the view
-  // they can read.
   await loadAssignments();
   const saved = assignments.find(item => item.id === id);
   if (saved && (saved.editor_stage || 'received') !== chosen) {
     const control = assignmentsList.querySelector(`[data-editor-stage="${id}"]`);
-    if (control) stageNote(control, 'The database did not keep this change. Ask the admin to re-run supabase/workflow-migration.sql.');
+    if (control) stageNote(control, 'The database did not keep this change. Ask the admin to run supabase/write-path-fix.sql.');
   }
 });
 
@@ -204,9 +202,7 @@ document.querySelector('#saveFinalLink').addEventListener('click', async () => {
   linkMessage.textContent = 'Saving...';
   linkMessage.className = 'portal-message';
   const savingId = editingId;
-  const { error } = await editorPortal.client.from('projects')
-    .update({ final_video_link: value || null })
-    .eq('id', savingId);
+  const { error } = await editorPortal.client.rpc('set_final_video_link', { p_id: savingId, p_link: value || null });
   if (error) {
     linkMessage.textContent = error.message;
     linkMessage.className = 'portal-message error';
@@ -215,7 +211,7 @@ document.querySelector('#saveFinalLink').addEventListener('click', async () => {
   await loadAssignments();
   const stored = assignments.find(item => item.id === savingId);
   if (stored && (stored.final_video_link || '') !== value) {
-    linkMessage.textContent = 'The database did not keep this change. Ask the admin to re-run supabase/workflow-migration.sql.';
+    linkMessage.textContent = 'The database did not keep this change. Ask the admin to run supabase/write-path-fix.sql.';
     linkMessage.className = 'portal-message error';
     return;
   }

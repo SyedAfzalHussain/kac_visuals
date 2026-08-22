@@ -166,7 +166,10 @@ document.querySelector('#saveClientEdit').addEventListener('click', async () => 
   }
   clientEditMessage.textContent = 'Saving...';
   clientEditMessage.className = 'portal-message';
-  const { error } = await profilePortal.client.from('projects').update(payload).eq('id', editingId);
+  // Clients have no SELECT policy on projects, and an UPDATE's WHERE clause is
+  // subject to SELECT policies — a direct update would match nothing. The RPC
+  // whitelists exactly these fields and the update guard enforces the rest.
+  const { error } = await profilePortal.client.rpc('update_my_project', { p_id: editingId, p_patch: payload });
   if (error) {
     clientEditMessage.textContent = error.message;
     clientEditMessage.className = 'portal-message error';
