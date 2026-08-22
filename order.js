@@ -1,11 +1,11 @@
 const orderServices = [
   { id: 'portrait1', name: 'Signature Edit', price: 260, duration: 'Vertical video', minLength: 15, maxLength: 75, description: 'Signature style, premium finish, and polished storytelling.' },
   { id: 'portrait3', name: 'Listing Edit', price: 230, duration: 'Vertical video', minLength: 15, maxLength: 75, description: 'Property storytelling, cinematic pacing, and social-ready delivery.' },
-  { id: 'portrait4', name: 'Standard Branding', price: 120, duration: 'Vertical video', minLength: 15, maxLength: 40, description: 'Clean graphics and a focused branded social edit.' },
-  { id: 'portrait2', name: 'Advanced Branding', price: 170, duration: 'Vertical video', minLength: 15, maxLength: 40, description: 'Brand storytelling, graphics, sound design, and social delivery.' },
+  { id: 'portrait4', name: 'Standard Branding', price: 120, duration: 'Vertical video', minLength: 15, maxLength: 75, description: 'Clean graphics and a focused branded social edit.' },
+  { id: 'portrait2', name: 'Advanced Branding', price: 170, duration: 'Vertical video', minLength: 15, maxLength: 75, description: 'Brand storytelling, graphics, sound design, and social delivery.' },
   { id: 'portrait5', name: 'Commercial Edit', price: 230, duration: 'Vertical video', minLength: 15, maxLength: 75, description: 'Premium commercial visuals with intentional pacing and sound.' },
   { id: 'portrait7', name: 'Yacht Edit', price: 260, duration: 'Vertical video', minLength: 15, maxLength: 75, description: 'Luxury visuals, cinematic pacing, and premium sound design.' },
-  { id: 'landscape2', name: 'Cinematic Edit', price: 230, duration: 'Landscape video', minLength: 20, maxLength: 120, description: 'Wide-format property storytelling with a cinematic finish.' },
+  { id: 'landscape2', name: 'Cinematic Edit', price: 230, duration: 'Landscape video', minLength: 20, maxLength: 300, description: 'Wide-format property storytelling with a cinematic finish.' },
   { id: 'landscape1', name: 'Simple Edit', price: 120, duration: 'Landscape video', minLength: 20, maxLength: 120, description: 'Clean landscape delivery with polished sound and pacing.' }
 ];
 
