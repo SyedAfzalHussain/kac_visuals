@@ -107,6 +107,25 @@ function editors() { return people.filter(person => person.role === 'editor'); }
 // An assignment survives in the row even if the person is no longer an editor.
 // The dropdown lists editors only, so without this the cell would quietly read
 // "Unassigned" while the project stayed pointed at someone who cannot see it.
+// Mails the assigned editor their brief. Never blocks the assignment itself —
+// a mail outage must not stop work being handed over.
+async function emailBriefToEditor(projectId) {
+  const { data } = await adminPortal.client.auth.getSession();
+  const token = data?.session?.access_token;
+  if (!token) return { error: 'Your session has expired — sign in again.' };
+  try {
+    const response = await fetch('/api/notify-editor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ projectId })
+    });
+    const result = await response.json().catch(() => ({}));
+    return response.ok ? { to: result.to } : { error: result.error || `Mail failed (${response.status}).` };
+  } catch {
+    return { error: 'Could not reach the mail service.' };
+  }
+}
+
 function priorityBadge(project) {
   const value = project.priority || 'normal';
   if (value === 'normal') return '';   // the default is noise on every row
@@ -213,7 +232,8 @@ function render() {
 function workflowSection(project) {
   return `<section class="portal-detail-section"><h3>Workflow · Internal</h3>
     <div class="portal-detail-grid">${detail('Priority', labelFor(priorities, project.priority || 'normal'))}${detail('Admin stage', labelFor(adminStages, project.admin_stage || 'added'))}${detail('Editor stage', labelFor(editorStages, project.editor_stage || 'received'))}${detail('Assigned editor', project.assigned_editor_name)}</div>
-    ${releasePanel(project)}</section>`;
+    ${releasePanel(project)}
+    ${project.assigned_editor_id ? '<div class="release-panel"><p><strong>Send the brief again.</strong> The assigned editor already received it when you assigned them.</p><button class="button button-outline button-small" type="button" id="emailBrief" style="color:#8b7cff">✉ Email Brief To Editor</button></div>' : ''}</section>`;
 }
 
 function releasePanel(project) {
@@ -571,6 +591,18 @@ editorsList.addEventListener('click', async event => {
 
 // Releasing the final video to the client is its own explicit action.
 detailsContent.addEventListener('click', async event => {
+  if (event.target.closest('#emailBrief') && detailProjectId) {
+    const button = event.target.closest('#emailBrief');
+    button.disabled = true;
+    button.textContent = 'Sending...';
+    const sent = await emailBriefToEditor(detailProjectId);
+    button.disabled = false;
+    button.textContent = '✉ Email Brief To Editor';
+    adminMessage.textContent = sent.error ? sent.error : `Brief emailed to ${sent.to}.`;
+    adminMessage.className = `portal-message ${sent.error ? 'error' : 'success'}`;
+    if (!sent.error) detailsDialog.close();
+    return;
+  }
   if (!event.target.closest('#toggleRelease') || !detailProjectId) return;
   const project = allProjects.find(item => item.id === detailProjectId);
   if (!project) return;
@@ -643,7 +675,17 @@ tbody.addEventListener('change', async event => {
   const { error } = await adminPortal.client.from('projects').update(payload).eq('id', id);
   adminMessage.textContent = error ? error.message : `${label} updated.`;
   adminMessage.className = `portal-message ${error ? 'error' : 'success'}`;
-  if (!error) await loadProjects();
+  if (error) return;
+  await loadProjects();
+
+  if (editorSelect && payload.assigned_editor_id) {
+    adminMessage.textContent = `${label} updated. Emailing the brief...`;
+    const sent = await emailBriefToEditor(id);
+    adminMessage.textContent = sent.error
+      ? `Assigned, but the brief email failed: ${sent.error}`
+      : `Assigned and brief emailed to ${sent.to}.`;
+    adminMessage.className = `portal-message ${sent.error ? 'error' : 'success'}`;
+  }
 });
 
 document.querySelector('#saveProjectEdit').addEventListener('click', async () => {
