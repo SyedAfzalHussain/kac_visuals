@@ -15,10 +15,23 @@
     return data.user;
   }
 
+  // The profiles row is read through row security, so it can come back empty
+  // (missing row, policy change, stale schema cache) — and an empty read used
+  // to read as "client", which is how a promoted editor kept landing in the
+  // client portal with no assignments. my_role() is SECURITY DEFINER, so it
+  // answers even when the row read does not; the row still supplies the name
+  // and company. Falls back to the row when my_role() is not installed yet.
   async function profile(id) {
     if (!client || !id) return null;
-    const { data } = await client.from('profiles').select('*').eq('id', id).single();
-    return data;
+    const [row, role] = await Promise.all([
+      client.from('profiles').select('*').eq('id', id).maybeSingle(),
+      client.rpc('my_role')
+    ]);
+    if (row.error) console.error('[portal] profile read failed:', row.error.message);
+    if (role.error) console.error('[portal] my_role failed:', role.error.message);
+    const authoritative = typeof role.data === 'string' ? role.data : null;
+    if (!row.data) return authoritative ? { id, role: authoritative } : null;
+    return authoritative ? { ...row.data, role: authoritative } : row.data;
   }
 
   async function requireUser(options = {}) {

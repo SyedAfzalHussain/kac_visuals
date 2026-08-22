@@ -89,3 +89,5 @@
 @keyframes auth-spin{to{transform:rotate(1turn)}}
 @media(prefers-reduced-motion:reduce){.auth-gate::before{animation:none}}
 @media print{.auth-gate{display:none!important}}
+
+.assign-warning{display:block;margin-top:6px;color:#ffb4b4;font-size:11px;line-height:1.4}

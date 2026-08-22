@@ -92,6 +92,14 @@ function servicesOf(project) {
   return (project.services || []).map(service => `${service.name} × ${Number(service.quantity) || 0}`).join(', ') || project.service_name || '';
 }
 function editors() { return people.filter(person => person.role === 'editor'); }
+// An assignment survives in the row even if the person is no longer an editor.
+// The dropdown lists editors only, so without this the cell would quietly read
+// "Unassigned" while the project stayed pointed at someone who cannot see it.
+function staleAssignee(project) {
+  if (!project.assigned_editor_id) return null;
+  const person = people.find(item => item.id === project.assigned_editor_id);
+  return person && person.role !== 'editor' ? person : null;
+}
 
 function renderHistory(edits) {
   if (!edits?.length) return '<p class="history-empty">No edits yet — this is the original submission.</p>';
@@ -128,7 +136,7 @@ function projectRow(project) {
     <td>${new Date(project.created_at).toLocaleDateString()}</td>
     <td><select data-project-status="${project.id}">${statuses.map(([value,label]) => `<option value="${value}"${project.status === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
     <td><select data-payment-status="${project.id}">${paymentStatuses.map(([value,label]) => `<option value="${value}"${(project.payment_status || 'unpaid') === value ? ' selected' : ''}>${label}</option>`).join('')}</select></td>
-    <td><select data-assign-editor="${project.id}"><option value="">Unassigned</option>${editors().map(person => `<option value="${person.id}"${assigned === person.id ? ' selected' : ''}>${escapeText(person.full_name || person.email)}</option>`).join('')}</select></td>
+    <td><select data-assign-editor="${project.id}"><option value="">Unassigned</option>${editors().map(person => `<option value="${person.id}"${assigned === person.id ? ' selected' : ''}>${escapeText(person.full_name || person.email)}</option>`).join('')}${staleAssignee(project) ? `<option value="${staleAssignee(project).id}" selected>${escapeText(staleAssignee(project).full_name || staleAssignee(project).email)} · not an editor</option>` : ''}</select>${staleAssignee(project) ? '<span class="assign-warning">Assignee is not an editor — they cannot see this project.</span>' : ''}</td>
     <td><div class="row-actions"><button class="admin-row-button" type="button" data-edit-project="${project.id}">Edit</button><button class="admin-row-button danger" type="button" data-delete-project="${project.id}">Delete</button></div></td>
   </tr>`;
 }
@@ -498,10 +506,19 @@ editorsList.addEventListener('click', async event => {
     editorsMessage.className = 'portal-message error';
     return;
   }
-  editorsMessage.textContent = 'Role updated.';
-  editorsMessage.className = 'portal-message success';
+  // Read the row back: a role change can be accepted by the RPC and still not
+  // stick (a check constraint that predates the editor role, for one), and a
+  // silent no-op here is invisible until the person opens their portal.
   await loadProjects();
   renderPeople();
+  const saved = people.find(person => person.id === button.dataset.user);
+  if (saved && saved.role !== button.dataset.setRole) {
+    editorsMessage.textContent = `The role did not save — ${escapeText(saved.email)} is still "${escapeText(saved.role)}". Run supabase/role-visibility-fix.sql, then try again.`;
+    editorsMessage.className = 'portal-message error';
+    return;
+  }
+  editorsMessage.textContent = 'Role updated.';
+  editorsMessage.className = 'portal-message success';
 });
 
 tbody.addEventListener('click', event => {
